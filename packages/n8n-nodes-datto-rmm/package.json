@@ -1,0 +1,65 @@
+{
+	"name": "n8n-nodes-datto-rmm",
+	"version": "0.1.0",
+	"description": "n8n node for Datto RMM integration",
+	"keywords": [
+		"n8n-community-node-package",
+		"datto-rmm",
+		"rmm",
+		"datto",
+		"n8n"
+	],
+	"license": "MIT",
+	"author": {
+		"name": "n8n"
+	},
+	"engines": {
+		"node": ">=18.10",
+		"pnpm": ">=9.1"
+	},
+	"packageManager": "pnpm@9.1.4",
+	"main": "index.js",
+	"scripts": {
+		"preinstall": "npx only-allow pnpm",
+		"clean": "rimraf dist",
+		"build": "pnpm clean && tsc && gulp build:icons",
+		"dev": "gulp build:icons && tsc --watch",
+		"format": "prettier nodes credentials --write",
+		"lint": "eslint nodes credentials package.json",
+		"lintfix": "eslint nodes credentials package.json --fix",
+		"prepublishOnly": "pnpm build",
+		"gen:types": "openapi-typescript ../../datto_swagger.json --output ./nodes/DattoRmm/types/datto-rmm-api.ts"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"credentials": [
+			"dist/credentials/DattoRmmApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/DattoRmm/DattoRmm.node.js",
+			"dist/nodes/DattoRmm/DattoRmmTrigger.node.js"
+		]
+	},
+	"devDependencies": {
+		"gulp": "^5.0.0",
+		"openapi-typescript": "^7.8.0",
+		"ts-node": "^10.9.2"
+	},
+	"dependencies": {
+		"chalk": "^4.1.2",
+		"change-case": "^4.1.2",
+		"keyv": "5.2.3",
+		"keyv-file": "5.1.1",
+		"moment": "^2.30.1",
+		"moment-timezone": "^0.5.47",
+		"pino": "^9.6.0",
+		"pino-pretty": "^13.0.0",
+		"pluralize": "^8.0.0"
+	},
+	"peerDependencies": {
+		"n8n-workflow": ">=1.0.0"
+	}
+}

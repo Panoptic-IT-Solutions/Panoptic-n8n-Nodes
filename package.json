@@ -1,0 +1,52 @@
+{
+	"name": "@panoptic-it-solutions/n8n-nodes",
+	"version": "1.0.0",
+	"description": "Monorepo for n8n nodes - Autotask and Datto RMM integrations",
+	"private": true,
+	"keywords": [
+		"n8n-community-node-package",
+		"autotask",
+		"datto-rmm",
+		"psa",
+		"rmm",
+		"n8n"
+	],
+	"license": "MIT",
+	"author": {
+		"name": "Panoptic - Donnacha"
+	},
+	"engines": {
+		"node": ">=18.10",
+		"pnpm": ">=9.1"
+	},
+	"packageManager": "pnpm@9.1.4",
+	"workspaces": [
+		"packages/*"
+	],
+	"scripts": {
+		"preinstall": "npx only-allow pnpm",
+		"build": "pnpm -r build",
+		"dev": "pnpm -r dev",
+		"clean": "pnpm -r clean",
+		"lint": "pnpm -r lint",
+		"lintfix": "pnpm -r lintfix",
+		"format": "pnpm -r format",
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"version": "pnpm changeset version && pnpm install --no-frozen-lockfile",
+		"release": "pnpm build && pnpm changeset publish"
+	},
+	"devDependencies": {
+		"@changesets/cli": "^2.29.5",
+		"@eslint/js": "^9.30.0",
+		"@types/node": "^24.0.7",
+		"@typescript-eslint/eslint-plugin": "^8.35.0",
+		"@typescript-eslint/parser": "^8.35.0",
+		"eslint": "^8.57.1",
+		"eslint-plugin-n8n-nodes-base": "^1.16.3",
+		"globals": "^16.2.0",
+		"n8n-workflow": "^1.82.0",
+		"prettier": "^3.6.2",
+		"rimraf": "^6.0.1",
+		"typescript": "^5.8.3"
+	}
+}

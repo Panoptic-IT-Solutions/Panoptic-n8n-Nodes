@@ -1,0 +1,32 @@
+import type { components } from './datto-rmm-api';
+
+export type Alert = components['schemas']['Alert'];
+export type AlertsPage = components['schemas']['AlertsPage'];
+export type AlertContext = components['schemas']['AlertContext'];
+export type ActionContext = components['schemas']['ActionContext'];
+export type AntivirusContext = components['schemas']['AntivirusContext'];
+export type BackupManagementContext = components['schemas']['BackupManagementContext'];
+export type CustomSNMPContext = components['schemas']['CustomSNMPContext'];
+export type DiskHealthContext = components['schemas']['DiskHealthContext'];
+export type DiskUsageContext = components['schemas']['DiskUsageContext'];
+export type EndpointSecurityThreatContext = components['schemas']['EndpointSecurityThreatContext'];
+export type EndpointSecurityWindowsDefenderContext =
+	components['schemas']['EndpointSecurityWindowsDefenderContext'];
+export type EventLogContext = components['schemas']['EventLogContext'];
+export type FanContext = components['schemas']['FanContext'];
+export type FileSystemContext = components['schemas']['FileSystemContext'];
+export type OnlineOfflineStatusContext = components['schemas']['OnlineOfflineStatusContext'];
+export type PatchContext = components['schemas']['PatchContext'];
+export type PingContext = components['schemas']['PingContext'];
+export type PrinterContext = components['schemas']['PrinterContext'];
+export type PsuContext = components['schemas']['PsuContext'];
+export type RansomWareContext = components['schemas']['RansomWareContext'];
+export type ResourceUsageContext = components['schemas']['ResourceUsageContext'];
+export type SNMPProbeContext = components['schemas']['SNMPProbeContext'];
+export type ScriptContext = components['schemas']['ScriptContext'];
+export type SecCenterContext = components['schemas']['SecCenterContext'];
+export type SecurityManagementContext = components['schemas']['SecurityManagementContext'];
+export type StatusContext = components['schemas']['StatusContext'];
+export type TemperatureContext = components['schemas']['TemperatureContext'];
+export type WindowsPerformanceContext = components['schemas']['WindowsPerformanceContext'];
+export type WmiContext = components['schemas']['WmiContext'];
