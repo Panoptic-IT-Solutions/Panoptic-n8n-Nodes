@@ -1,5 +1,4 @@
-import { NodeConnectionType } from 'n8n-workflow';
-import type {
+import {
 	IExecuteFunctions,
 	INodeExecutionData,
 	INodeType,
@@ -11,15 +10,17 @@ export class DattoRmm implements INodeType {
 		displayName: 'Datto RMM',
 		name: 'dattoRmm',
 		icon: 'file:datto-rmm.svg',
-		group: ['transform'],
+		group: ['sources'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-		description: 'Consume Datto RMM API',
+		description: 'Get data from the Datto RMM API',
 		defaults: {
 			name: 'Datto RMM',
 		},
-		inputs: [NodeConnectionType.Main],
-		outputs: [NodeConnectionType.Main],
+		// @ts-expect-error (n8n-nodes-base linter rule requires this to be 'main')
+		inputs: ['main'],
+		// @ts-expect-error (n8n-nodes-base linter rule requires this to be 'main')
+		outputs: ['main'],
 		credentials: [
 			{
 				name: 'dattoRmmApi',

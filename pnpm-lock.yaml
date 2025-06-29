@@ -151,6 +151,9 @@ importers:
         specifier: ^8.0.0
         version: 8.0.0
     devDependencies:
+      eslint-plugin-n8n-nodes-base:
+        specifier: ^1.16.3
+        version: 1.16.3(eslint@8.57.1)(typescript@5.8.3)
       gulp:
         specifier: ^5.0.0
         version: 5.0.1

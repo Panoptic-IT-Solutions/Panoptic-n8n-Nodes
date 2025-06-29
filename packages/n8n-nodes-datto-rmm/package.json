@@ -39,11 +39,11 @@
 			"dist/credentials/DattoRmmApi.credentials.js"
 		],
 		"nodes": [
-			"dist/nodes/DattoRmm/DattoRmm.node.js",
-			"dist/nodes/DattoRmm/DattoRmmTrigger.node.js"
+			"dist/nodes/DattoRmm/DattoRmm.node.js"
 		]
 	},
 	"devDependencies": {
+		"eslint-plugin-n8n-nodes-base": "^1.16.3",
 		"gulp": "^5.0.0",
 		"openapi-typescript": "^7.8.0",
 		"ts-node": "^10.9.2"
