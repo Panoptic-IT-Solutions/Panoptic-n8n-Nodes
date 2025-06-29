@@ -1,5 +1,11 @@
 # n8n-nodes-datto-rmm
 
+## 0.2.1
+
+### Patch Changes
+
+- aa5b1f2: chore: Scope packages to @panoptic-it-solutions for publishing
+
 ## 0.2.0
 
 ### Minor Changes
