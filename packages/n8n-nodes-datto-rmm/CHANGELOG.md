@@ -1,5 +1,11 @@
 # n8n-nodes-datto-rmm
 
+## 0.3.0
+
+### Minor Changes
+
+- f7bb046: add detailed readme and fix node configuration
+
 ## 0.2.1
 
 ### Patch Changes
