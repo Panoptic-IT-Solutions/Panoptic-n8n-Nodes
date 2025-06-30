@@ -1,5 +1,11 @@
 # n8n-nodes-datto-rmm
 
+## 0.4.5
+
+### Patch Changes
+
+- ee0004a: Oauth2 tests
+
 ## 0.4.4
 
 ### Patch Changes
