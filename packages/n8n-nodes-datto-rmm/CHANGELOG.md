@@ -1,5 +1,17 @@
 # n8n-nodes-datto-rmm
 
+## 0.4.0-alpha.5
+
+### Patch Changes
+
+- **🚨 CRITICAL FIX: OAuth2 JSON response parsing bug**
+  - Fixed critical bug where valid OAuth2 tokens were incorrectly detected as missing
+  - Added support for both string and object OAuth2 responses from n8n request helper
+  - Added `json: true` flag to ensure proper JSON parsing in n8n production environments
+  - Enhanced response type detection and automatic JSON parsing fallback
+  - This resolves the "No access token received" error when valid tokens were actually returned
+  - All OAuth2 functionality now works correctly in both local testing and production n8n
+
 ## 0.4.0-alpha.4
 
 ### Patch Changes

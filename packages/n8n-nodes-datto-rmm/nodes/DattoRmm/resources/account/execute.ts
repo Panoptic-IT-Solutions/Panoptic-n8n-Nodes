@@ -65,29 +65,42 @@ async function getAccessToken(context: IExecuteFunctions): Promise<string> {
 				Authorization: `Basic ${Buffer.from('public-client:public').toString('base64')}`,
 			},
 			body: `grant_type=password&username=${encodeURIComponent(apiKey)}&password=${encodeURIComponent(apiSecret)}`,
+			json: true, // Ensure JSON parsing
 		});
 
 		// Log the response for debugging
+		console.log('OAuth2 Response Type:', typeof response);
 		console.log('OAuth2 Response:', JSON.stringify(response, null, 2));
 
-		if (!response.access_token) {
+		// Parse response if it comes back as a string
+		let parsedResponse = response;
+		if (typeof response === 'string') {
+			try {
+				parsedResponse = JSON.parse(response);
+			} catch (parseError) {
+				throw new Error(`Failed to parse OAuth2 response: ${response}`);
+			}
+		}
+
+		if (!parsedResponse.access_token) {
 			// Enhanced error handling with response details
-			const errorMsg = response.error || response.error_description || 'No access token received';
-			const responseDetails = JSON.stringify(response, null, 2);
+			const errorMsg =
+				parsedResponse.error || parsedResponse.error_description || 'No access token received';
+			const responseDetails = JSON.stringify(parsedResponse, null, 2);
 
 			throw new Error(`OAuth2 token request failed: ${errorMsg}. Response: ${responseDetails}`);
 		}
 
 		// Cache the token (default to 100 hours as per Datto documentation)
-		const expiresIn = response.expires_in || 360000; // 100 hours in seconds
+		const expiresIn = parsedResponse.expires_in || 360000; // 100 hours in seconds
 		const expiresAt = Date.now() + expiresIn * 1000;
 
 		tokenCache.set(cacheKey, {
-			token: response.access_token,
+			token: parsedResponse.access_token,
 			expiresAt,
 		});
 
-		return response.access_token;
+		return parsedResponse.access_token;
 	} catch (error) {
 		// Enhanced error handling with more context
 		let errorMessage = error.message;
