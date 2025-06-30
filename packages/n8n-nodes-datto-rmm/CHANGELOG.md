@@ -1,5 +1,11 @@
 # n8n-nodes-datto-rmm
 
+## 0.4.7
+
+### Patch Changes
+
+- 47aa214: feat(datto-rmm): Add device and site resource operations to Datto RMM node
+
 ## 0.4.6
 
 ### Patch Changes
