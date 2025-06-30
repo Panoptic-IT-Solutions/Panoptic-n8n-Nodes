@@ -165,7 +165,17 @@ describe('Error Handler', () => {
 		});
 
 		it('should re-throw NodeApiError and NodeOperationError as-is', async () => {
-			const nodeError = new NodeOperationError({ name: 'TestNode', type: 'test' }, 'Test error');
+			const nodeError = new NodeOperationError(
+				{
+					id: 'test-node-id',
+					name: 'TestNode',
+					type: 'test',
+					typeVersion: 1,
+					position: [0, 0],
+					parameters: {},
+				},
+				'Test error',
+			);
 			const mockOperation = jest.fn().mockRejectedValue(nodeError);
 
 			await expect(handleErrors(mockExecuteFunctions, mockOperation)).rejects.toThrow(nodeError);
