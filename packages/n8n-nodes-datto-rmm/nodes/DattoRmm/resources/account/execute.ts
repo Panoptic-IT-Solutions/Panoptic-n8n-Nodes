@@ -14,8 +14,35 @@ async function getAccessToken(context: IExecuteFunctions): Promise<string> {
 	const apiKey = credentials.apiKey as string;
 	const apiSecret = credentials.apiSecret as string;
 
+	// Validate credentials
+	if (!apiUrl || !apiKey || !apiSecret) {
+		throw new NodeOperationError(
+			context.getNode(),
+			'Missing required credentials: API URL, API Key, and API Secret are all required',
+			{
+				description: 'Please check your Datto RMM API credentials configuration',
+			},
+		);
+	}
+
+	// Validate and normalize API URL
+	let normalizedUrl = apiUrl.trim();
+	if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
+		throw new NodeOperationError(
+			context.getNode(),
+			'Invalid API URL format: URL must start with http:// or https://',
+			{
+				description:
+					'Please ensure your API URL is properly formatted (e.g., https://pinotage-api.centrastage.net)',
+			},
+		);
+	}
+
+	// Remove trailing slashes and /api suffixes
+	normalizedUrl = normalizedUrl.replace(/\/+$/, '').replace(/\/api\/?$/, '');
+
 	// Create a cache key based on the credentials
-	const cacheKey = `${apiUrl}:${apiKey}`;
+	const cacheKey = `${normalizedUrl}:${apiKey}`;
 
 	// Check if we have a valid cached token
 	const cached = tokenCache.get(cacheKey);
@@ -24,7 +51,10 @@ async function getAccessToken(context: IExecuteFunctions): Promise<string> {
 	}
 
 	// Request new token
-	const tokenUrl = `${apiUrl}/auth/oauth/token`;
+	const tokenUrl = `${normalizedUrl}/auth/oauth/token`;
+
+	console.log(`Attempting OAuth2 token request to: ${tokenUrl}`);
+	console.log(`API Key: ${apiKey.substring(0, 8)}...`);
 
 	try {
 		const response = await context.helpers.request({
@@ -37,8 +67,15 @@ async function getAccessToken(context: IExecuteFunctions): Promise<string> {
 			body: `grant_type=password&username=${encodeURIComponent(apiKey)}&password=${encodeURIComponent(apiSecret)}`,
 		});
 
+		// Log the response for debugging
+		console.log('OAuth2 Response:', JSON.stringify(response, null, 2));
+
 		if (!response.access_token) {
-			throw new Error('No access token received from OAuth2 response');
+			// Enhanced error handling with response details
+			const errorMsg = response.error || response.error_description || 'No access token received';
+			const responseDetails = JSON.stringify(response, null, 2);
+
+			throw new Error(`OAuth2 token request failed: ${errorMsg}. Response: ${responseDetails}`);
 		}
 
 		// Cache the token (default to 100 hours as per Datto documentation)
@@ -52,11 +89,31 @@ async function getAccessToken(context: IExecuteFunctions): Promise<string> {
 
 		return response.access_token;
 	} catch (error) {
+		// Enhanced error handling with more context
+		let errorMessage = error.message;
+		let description = 'Please check your API credentials and URL configuration';
+
+		// Handle specific OAuth2 error responses
+		if (error.response?.data) {
+			const errorData = error.response.data;
+			if (errorData.error === 'invalid_grant') {
+				errorMessage = 'Invalid API credentials';
+				description =
+					'The API key or secret provided is incorrect. Please verify your Datto RMM API credentials.';
+			} else if (errorData.error === 'invalid_client') {
+				errorMessage = 'Invalid OAuth2 client configuration';
+				description = 'There may be an issue with the OAuth2 client setup. Please contact support.';
+			} else if (errorData.error_description) {
+				errorMessage = `OAuth2 Error: ${errorData.error_description}`;
+				description = 'Please check the error details and your API configuration.';
+			}
+		}
+
 		throw new NodeOperationError(
 			context.getNode(),
-			`Failed to obtain OAuth2 access token: ${error.message}`,
+			`Failed to obtain OAuth2 access token: ${errorMessage}`,
 			{
-				description: 'Please check your API credentials and URL configuration',
+				description,
 			},
 		);
 	}
@@ -72,12 +129,19 @@ async function makeApiRequest(
 ) {
 	const credentials = await context.getCredentials('dattoRmmApi');
 	const apiUrl = credentials.apiUrl as string;
+
+	// Normalize API URL (same logic as in getAccessToken)
+	let normalizedUrl = apiUrl
+		.trim()
+		.replace(/\/+$/, '')
+		.replace(/\/api\/?$/, '');
+
 	const accessToken = await getAccessToken(context);
 
 	return context.helpers.request({
 		method,
 		url: endpoint,
-		baseURL: apiUrl,
+		baseURL: normalizedUrl,
 		headers: {
 			Authorization: `Bearer ${accessToken}`,
 			Accept: 'application/json',

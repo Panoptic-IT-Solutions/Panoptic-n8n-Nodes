@@ -1,5 +1,19 @@
 # n8n-nodes-datto-rmm
 
+## 0.4.0-alpha.4
+
+### Patch Changes
+
+- **Enhanced OAuth2 error handling and diagnostics**
+  - Added comprehensive error logging for OAuth2 token acquisition to help diagnose production issues
+  - Enhanced credential validation with proper error messages for missing or invalid credentials
+  - Added URL format validation with detailed guidance for API URL configuration
+  - Implemented detailed OAuth2 response logging to identify specific authentication failures
+  - Added specific error handling for common OAuth2 errors (invalid_grant, invalid_client, etc.)
+  - Normalized API URL handling to remove trailing slashes and /api suffixes consistently
+  - Added debug logging for OAuth2 token requests showing endpoint and credential info
+  - All error messages now provide specific guidance for resolution
+
 ## 0.4.0-alpha.3
 
 ### Patch Changes
