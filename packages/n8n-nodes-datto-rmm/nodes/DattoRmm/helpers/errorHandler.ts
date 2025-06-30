@@ -191,6 +191,14 @@ function handleGenericError(context: IExecuteFunctions, error: GenericError): ne
 		});
 	}
 
+	// Handle URL parsing errors
+	if (error.message?.includes('Invalid URL') || error.code === 'ERR_INVALID_URL') {
+		throw new NodeOperationError(context.getNode(), 'Invalid API URL configuration', {
+			description:
+				'Please ensure your API URL is correctly formatted (e.g., https://pinotage-api.centrastage.net) without trailing slashes or /api suffix',
+		});
+	}
+
 	// Fallback for unknown errors
 	throw new NodeOperationError(
 		context.getNode(),

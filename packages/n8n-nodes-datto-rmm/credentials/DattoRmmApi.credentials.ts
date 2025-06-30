@@ -44,7 +44,7 @@ export class DattoRmmApi implements ICredentialType {
 			displayName: 'Access Token URL',
 			name: 'accessTokenUrl',
 			type: 'hidden',
-			default: '={{$self.apiUrl.replace(new RegExp("/+$"), "")}}/auth/oauth/token',
+			default: '={{$self.apiUrl}}/auth/oauth/token',
 		},
 		{
 			displayName: 'Client ID',
