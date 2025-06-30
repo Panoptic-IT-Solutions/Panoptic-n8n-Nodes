@@ -1,4 +1,4 @@
-import { NodeConnectionType, type ResourceMapperFields, NodeOperationError } from 'n8n-workflow';
+import { type ResourceMapperFields, NodeOperationError } from 'n8n-workflow';
 import type {
 	IExecuteFunctions,
 	ILoadOptionsFunctions,
@@ -32,14 +32,19 @@ export class DattoRmm implements INodeType {
 		defaults: {
 			name: 'Datto RMM',
 		},
-		inputs: [NodeConnectionType.Main],
-		outputs: [NodeConnectionType.Main],
+		inputs: ['main'] as any,
+		outputs: ['main'] as any,
 		credentials: [
 			{
 				name: 'dattoRmmApi',
 				required: true,
 			},
 		],
+		// @ts-expect-error: 'authentication' is a valid property for INodeTypeDescription
+		authentication: {
+			type: 'oauth2',
+			name: 'dattoRmmApi',
+		},
 		requestDefaults: {
 			baseURL: '={{$credentials.apiUrl}}',
 			headers: {

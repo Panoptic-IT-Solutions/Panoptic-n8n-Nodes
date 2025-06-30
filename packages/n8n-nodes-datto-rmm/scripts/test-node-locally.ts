@@ -11,16 +11,12 @@ import type {
 	IExecuteFunctions,
 	ILoadOptionsFunctions,
 	INodeExecutionData,
-	INodeParameterResourceLocator,
 	INodeParameters,
-	ICredentialsDecrypted,
 	ICredentialDataDecryptedObject,
 	INode,
 	IWorkflowExecuteAdditionalData,
 	IRunExecutionData,
-	INodeType,
 } from 'n8n-workflow';
-import { NodeParameterValueType } from 'n8n-workflow';
 
 // Load environment variables from .env file
 dotenv.config({ path: '../../.env' }); // Load from project root .env file
@@ -64,11 +60,11 @@ function createMockExecuteFunctions(
 ): IExecuteFunctions {
 	const mockContext: IExecuteFunctions = {
 		getInputData: () => inputData,
-		getNodeParameter: (parameterName: string, itemIndex: number) => {
+		getNodeParameter: (parameterName: string, _itemIndex: number) => {
 			return nodeParameters[parameterName];
 		},
 		getNode: () => MOCK_NODE,
-		getCredentials: async (type: string) => {
+		getCredentials: async (_type: string) => {
 			return CREDENTIALS;
 		},
 		continueOnFail: () => false,
@@ -271,7 +267,7 @@ function createMockLoadOptionsFunctions(nodeParameters: INodeParameters): ILoadO
 	return {
 		getNodeParameter: (parameterName: string) => nodeParameters[parameterName],
 		getNode: () => MOCK_NODE,
-		getCredentials: async (type: string) => CREDENTIALS,
+		getCredentials: async (_type: string) => CREDENTIALS,
 		helpers: {
 			request: async (options: any) => {
 				console.log(`\n🔍 Load options request: ${options.method} ${options.url}`);

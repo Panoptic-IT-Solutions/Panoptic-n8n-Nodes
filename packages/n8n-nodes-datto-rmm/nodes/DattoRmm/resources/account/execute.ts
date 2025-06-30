@@ -104,6 +104,6 @@ export async function executeAccountOperation(
 			}
 		}
 
-		return [this.helpers.returnJsonArray(returnData)];
+		return [returnData];
 	});
 }
