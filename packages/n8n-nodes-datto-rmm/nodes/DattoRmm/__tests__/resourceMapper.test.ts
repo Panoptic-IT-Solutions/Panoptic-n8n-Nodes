@@ -6,7 +6,14 @@ describe('Resource Mapper', () => {
 
 	beforeEach(() => {
 		mockLoadOptionsFunctions = {
-			getNode: () => ({ name: 'DattoRmm', type: 'dattoRmm' }),
+			getNode: () => ({
+				id: 'test-node-id',
+				name: 'DattoRmm',
+				type: 'dattoRmm',
+				typeVersion: 1,
+				position: [0, 0],
+				parameters: {},
+			}),
 		};
 	});
 
