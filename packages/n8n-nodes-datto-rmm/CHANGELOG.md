@@ -1,5 +1,11 @@
 # n8n-nodes-datto-rmm
 
+## 0.4.1
+
+### Patch Changes
+
+- f0054ca: Fix Oauth again
+
 ## 0.4.0
 
 ### Patch Changes
