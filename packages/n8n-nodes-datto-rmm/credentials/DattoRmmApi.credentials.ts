@@ -19,19 +19,14 @@ export class DattoRmmApi implements ICredentialType {
 			required: true,
 			placeholder: 'https://pinotage-api.centrastage.net',
 			description:
-				'The base URL for your Datto RMM API instance (e.g., https://pinotage-api.centrastage.net)',
+				'The base URL for your Datto RMM API instance (e.g., https://pinotage-api.centrastage.net). Do not include /api at the end.',
+			validateType: 'url',
 		},
 		{
 			displayName: 'Grant Type',
 			name: 'grantType',
 			type: 'hidden',
 			default: 'password',
-		},
-		{
-			displayName: 'Authorization URL',
-			name: 'authUrl',
-			type: 'hidden',
-			default: '={{$self.apiUrl.replace(/\\/+$/, "").replace(/\\/api\\/?$/, "")}}/auth/oauth/token',
 		},
 		{
 			displayName: 'Access Token URL',

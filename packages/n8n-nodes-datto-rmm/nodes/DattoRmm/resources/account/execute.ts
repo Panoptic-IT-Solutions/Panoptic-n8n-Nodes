@@ -1,6 +1,6 @@
 import type { IExecuteFunctions, INodeExecutionData, IHttpRequestMethods } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { handleErrors, validateRequiredParams } from '../../helpers/errorHandler';
+import { handleErrors } from '../../helpers/errorHandler';
 
 /**
  * Make authenticated API request to Datto RMM using n8n's OAuth2 system
@@ -14,11 +14,11 @@ async function makeApiRequest(
 	const credentials = await context.getCredentials('dattoRmmApi');
 	const apiUrl = credentials.apiUrl as string;
 
-	// Normalize API URL
+	// Normalize API URL - remove trailing slashes and /api suffix
 	const normalizedUrl = apiUrl
 		.trim()
-		.replace(/\/+$/, '')
-		.replace(/\/api\/?$/, '');
+		.replace(/\/+$/, '') // Remove trailing slashes
+		.replace(/\/api\/?$/, ''); // Remove /api or /api/ suffix
 
 	// Use n8n's built-in OAuth2 request helper
 	const response = await context.helpers.requestWithAuthentication.call(context, 'dattoRmmApi', {
@@ -36,7 +36,7 @@ async function makeApiRequest(
 	if (typeof response === 'string') {
 		try {
 			return JSON.parse(response);
-		} catch (error) {
+		} catch {
 			console.warn('Failed to parse string response as JSON:', response);
 			return response;
 		}
