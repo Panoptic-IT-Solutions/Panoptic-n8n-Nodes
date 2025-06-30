@@ -21,7 +21,7 @@ async function makeApiRequest(
 		.replace(/\/api\/?$/, '');
 
 	// Use n8n's built-in OAuth2 request helper
-	return context.helpers.requestWithAuthentication.call(context, 'dattoRmmApi', {
+	const response = await context.helpers.requestWithAuthentication.call(context, 'dattoRmmApi', {
 		method,
 		url: endpoint,
 		baseURL: normalizedUrl,
@@ -29,7 +29,20 @@ async function makeApiRequest(
 			Accept: 'application/json',
 			'Content-Type': 'application/json',
 		},
+		json: true, // Ensure response is parsed as JSON
 	});
+
+	// Handle the case where n8n sometimes returns JSON as a string
+	if (typeof response === 'string') {
+		try {
+			return JSON.parse(response);
+		} catch (error) {
+			console.warn('Failed to parse string response as JSON:', response);
+			return response;
+		}
+	}
+
+	return response;
 }
 
 export async function executeAccountOperation(
