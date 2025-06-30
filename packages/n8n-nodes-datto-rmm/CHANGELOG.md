@@ -1,5 +1,11 @@
 # n8n-nodes-datto-rmm
 
+## 0.4.6
+
+### Patch Changes
+
+- 9a1a8f5: oauth
+
 ## 0.4.5
 
 ### Patch Changes
