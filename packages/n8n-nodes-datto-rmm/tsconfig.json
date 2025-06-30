@@ -3,11 +3,14 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./",
-    "noUnusedLocals": false
+    "noUnusedLocals": false,
+    "types": ["node"]
   },
   "include": [
     "credentials/**/*",
-    "nodes/**/*"
+    "nodes/**/*",
+    "**/*.test.ts",
+    "jest.setup.ts"
   ],
   "exclude": [
     "node_modules",
