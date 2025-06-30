@@ -1,6 +1,6 @@
 {
 	"name": "@panoptic-it-solutions/n8n-nodes-datto-rmm",
-	"version": "0.4.0-alpha.2",
+	"version": "0.4.0-alpha.3",
 	"description": "n8n node for Datto RMM integration",
 	"keywords": [
 		"n8n-community-node-package",
@@ -48,6 +48,7 @@
 	},
 	"devDependencies": {
 		"@types/jest": "^29.5.12",
+		"dotenv": "^17.0.0",
 		"eslint-plugin-n8n-nodes-base": "^1.16.3",
 		"gulp": "^5.0.0",
 		"jest": "^29.7.0",

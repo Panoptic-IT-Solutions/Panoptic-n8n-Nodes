@@ -2,16 +2,9 @@ import type { ICredentialType, INodeProperties } from 'n8n-workflow';
 
 export class DattoRmmApi implements ICredentialType {
 	name = 'dattoRmmApi';
-	extends = ['oAuth2Api'];
 	displayName = 'Datto RMM API';
 	documentationUrl = 'https://rmm.datto.com/help/en/Content/2SETUP/APIv2.htm';
 	properties: INodeProperties[] = [
-		{
-			displayName: 'Grant Type',
-			name: 'grantType',
-			type: 'hidden',
-			default: 'password',
-		},
 		{
 			displayName: 'API URL',
 			name: 'apiUrl',
@@ -23,7 +16,7 @@ export class DattoRmmApi implements ICredentialType {
 		},
 		{
 			displayName: 'API Key',
-			name: 'username',
+			name: 'apiKey',
 			type: 'string',
 			default: '',
 			required: true,
@@ -31,7 +24,7 @@ export class DattoRmmApi implements ICredentialType {
 		},
 		{
 			displayName: 'API Secret Key',
-			name: 'password',
+			name: 'apiSecret',
 			type: 'string',
 			typeOptions: {
 				password: true,
@@ -39,36 +32,6 @@ export class DattoRmmApi implements ICredentialType {
 			default: '',
 			required: true,
 			description: 'This is your API Secret Key from the Datto RMM user settings page',
-		},
-		{
-			displayName: 'Access Token URL',
-			name: 'accessTokenUrl',
-			type: 'hidden',
-			default: '={{$self.apiUrl}}/auth/oauth/token',
-		},
-		{
-			displayName: 'Client ID',
-			name: 'clientId',
-			type: 'hidden',
-			default: 'public-client',
-		},
-		{
-			displayName: 'Client Secret',
-			name: 'clientSecret',
-			type: 'hidden',
-			default: 'public',
-		},
-		{
-			displayName: 'Authentication',
-			name: 'authentication',
-			type: 'hidden',
-			default: 'header',
-		},
-		{
-			displayName: 'Scope',
-			name: 'scope',
-			type: 'hidden',
-			default: '',
 		},
 	];
 }

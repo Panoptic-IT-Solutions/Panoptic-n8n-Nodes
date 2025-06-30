@@ -8,14 +8,17 @@ A comprehensive testing script that mimics how n8n uses the node, allowing you t
 
 ### Setup
 
-1. **Configure Credentials**: Edit the `MOCK_CREDENTIALS` object in `test-node-locally.ts`:
-   ```typescript
-   const MOCK_CREDENTIALS = {
-     apiUrl: 'https://your-datto-instance.centrastage.net', // Your Datto RMM API URL
-     username: 'your-api-key-here',                         // Your API Key
-     password: 'your-secret-key-here',                     // Your Secret Key
-     // ... other credentials
-   };
+1. **Configure Credentials**: Add your Datto RMM credentials to the `.env` file in the project root:
+   ```bash
+   # Datto RMM API Credentials
+   DATTO_API_KEY=your-api-key-here
+   DATTO_API_SECRET=your-api-secret-here
+   
+   # Optional: API Base URL (if different from default)
+   DATTO_API_BASE_URL=https://your-instance.centrastage.net
+   
+   # Optional: Use real API or mock responses (defaults to true)
+   TEST_USE_REAL_API=true
    ```
 
 2. **Install Dependencies**: Ensure all dependencies are installed:
@@ -97,12 +100,42 @@ The script includes comprehensive logging to help debug issues:
 - **Fast Development**: Test changes without deploying to n8n
 - **Comprehensive Testing**: Test all node aspects including methods section
 - **Easy Debugging**: Detailed logging and error reporting
-- **Credential Safety**: Uses local mock credentials, never exposes real credentials
+- **Secure Credentials**: Uses environment variables from .env file, keeps credentials out of code
+- **Credential Safety**: Never commits credentials to version control
+
+### Real vs Mock API Testing
+
+The script now supports **real API calls** by default! Configure this behavior with environment variables:
+
+#### Real API Mode (Default)
+```bash
+TEST_USE_REAL_API=true  # Default behavior
+```
+- Makes actual HTTP requests to Datto RMM API
+- Uses your real credentials for authentication
+- Perfect for integration testing and debugging
+
+#### Mock API Mode
+```bash
+TEST_USE_REAL_API=false  # Set explicitly to use mocks
+```
+- Returns simulated responses
+- Useful for testing node logic without API dependencies
+- Faster for repeated testing
 
 ### Limitations
 
-- **Mock Data**: Returns simulated responses for API calls
-- **Network Simulation**: Doesn't make actual HTTP requests (by default)
-- **Limited Validation**: May not catch all production edge cases
+- **API Rate Limits**: Real API mode counts against your account limits
+- **Limited n8n Context**: May not catch all production edge cases
+- **No Workflow Integration**: Tests individual node, not full workflows
 
-For real API testing, you can modify the `helpers.request` mock to make actual HTTP calls by removing the mock logic and letting it pass through to the real API. 
+### Environment Variables
+
+The script automatically loads credentials from your `.env` file using these variables:
+
+- `DATTO_API_KEY` - Your Datto RMM API Key (required)
+- `DATTO_API_SECRET` - Your Datto RMM API Secret (required)  
+- `DATTO_API_BASE_URL` - Your Datto RMM instance URL (optional, defaults to pinotage-api.centrastage.net)
+- `TEST_USE_REAL_API` - Whether to make real API calls (optional, defaults to true)
+
+**Security Note**: The `.env` file should be in your `.gitignore` to prevent credentials from being committed to version control. 

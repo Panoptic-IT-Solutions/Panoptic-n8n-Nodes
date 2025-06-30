@@ -5,6 +5,7 @@
  * Mimics how n8n uses the node for local development and testing
  */
 
+import * as dotenv from 'dotenv';
 import { DattoRmm } from '../nodes/DattoRmm/DattoRmm.node';
 import type {
 	IExecuteFunctions,
@@ -21,17 +22,17 @@ import type {
 } from 'n8n-workflow';
 import { NodeParameterValueType } from 'n8n-workflow';
 
-// Mock credentials - replace with your actual Datto RMM credentials
-const MOCK_CREDENTIALS: ICredentialDataDecryptedObject = {
-	apiUrl: 'https://pinotage-api.centrastage.net', // Replace with your actual API URL
-	username: 'your-api-key-here', // Replace with your actual API Key
-	password: 'your-secret-key-here', // Replace with your actual Secret Key
-	accessTokenUrl: 'https://pinotage-api.centrastage.net/auth/oauth/token',
-	clientId: 'public-client',
-	clientSecret: 'public',
-	authentication: 'header',
-	scope: '',
-	grantType: 'password',
+// Load environment variables from .env file
+dotenv.config({ path: '../../.env' }); // Load from project root .env file
+
+// Configuration
+const USE_REAL_API = process.env.TEST_USE_REAL_API !== 'false'; // Default to true, set to 'false' to use mocks
+
+// Credentials - loaded from environment variables
+const CREDENTIALS: ICredentialDataDecryptedObject = {
+	apiUrl: process.env.DATTO_API_BASE_URL || 'https://pinotage-api.centrastage.net',
+	apiKey: process.env.DATTO_API_KEY || '',
+	apiSecret: process.env.DATTO_API_SECRET || '',
 };
 
 // Mock node definition
@@ -60,9 +61,7 @@ function createMockExecuteFunctions(
 		},
 		getNode: () => MOCK_NODE,
 		getCredentials: async (type: string) => {
-			return {
-				data: MOCK_CREDENTIALS,
-			} as ICredentialsDecrypted;
+			return CREDENTIALS;
 		},
 		continueOnFail: () => false,
 		helpers: {
@@ -72,65 +71,104 @@ function createMockExecuteFunctions(
 					pairedItem: { item: index },
 				})),
 			request: async (options: any) => {
-				// Mock HTTP request - this is where we'd make the actual API call
 				const { method, url, headers, body } = options;
 
-				console.log(`\n🌐 Making ${method} request to: ${MOCK_CREDENTIALS.apiUrl}${url}`);
+				console.log(`\n🌐 Making ${method} request to: ${CREDENTIALS.apiUrl}${url}`);
 				console.log('📋 Headers:', JSON.stringify(headers || {}, null, 2));
 				if (body) {
-					console.log('📦 Body:', JSON.stringify(body, null, 2));
+					console.log('📦 Body:', typeof body === 'string' ? body : JSON.stringify(body, null, 2));
 				}
 
-				// Simulate OAuth token acquisition
-				if (url?.includes('/auth/oauth/token')) {
-					console.log('🔐 OAuth token request detected');
-					const mockToken = 'mock-access-token-' + Date.now();
-					tokenCache = {
-						token: mockToken,
-						expiresAt: Date.now() + 100 * 60 * 60 * 1000, // 100 hours
-					};
-					return {
-						access_token: mockToken,
-						token_type: 'Bearer',
-						expires_in: 360000,
-					};
-				}
+				if (USE_REAL_API) {
+					// Make real HTTP requests using fetch
+					try {
+						const fullUrl = url.startsWith('http') ? url : `${CREDENTIALS.apiUrl}${url}`;
 
-				// For actual API calls, return mock data based on the endpoint
-				if (url?.includes('/api/v2/account')) {
-					if (url.includes('/variables')) {
-						return {
-							uid: 'mock-account-uid',
-							variables: [
-								{ name: 'COMPANY_NAME', value: 'Mock Company' },
-								{ name: 'TIMEZONE', value: 'UTC' },
-								{ name: 'API_VERSION', value: 'v2' },
-							],
+						const response = await fetch(fullUrl, {
+							method: method,
+							headers: headers || {},
+							body: body ? (typeof body === 'string' ? body : JSON.stringify(body)) : undefined,
+						});
+
+						console.log(`✅ Response ${response.status}: ${response.statusText}`);
+
+						const contentType = response.headers.get('content-type');
+						if (contentType && contentType.includes('application/json')) {
+							const result = await response.json();
+							console.log('📦 Response body:', JSON.stringify(result, null, 2));
+							return result;
+						} else {
+							const text = await response.text();
+							console.log('📦 Response body (text):', text.substring(0, 200));
+							return text;
+						}
+					} catch (error) {
+						console.error('❌ Request error:', error);
+						throw error;
+					}
+				} else {
+					// Mock responses (fallback)
+					console.log('🎭 Using mock response');
+
+					if (url?.includes('/auth/oauth/token')) {
+						console.log('🔐 OAuth token request detected');
+						const mockToken = 'mock-access-token-' + Date.now();
+						tokenCache = {
+							token: mockToken,
+							expiresAt: Date.now() + 100 * 60 * 60 * 1000,
 						};
-					} else {
 						return {
-							uid: 'mock-account-uid',
-							name: 'Mock Datto RMM Account',
-							companyName: 'Mock Company Inc.',
-							timezone: 'UTC',
-							dateCreated: new Date().toISOString(),
-							apiVersion: 'v2',
-							features: ['monitoring', 'automation', 'patching'],
+							access_token: mockToken,
+							token_type: 'Bearer',
+							expires_in: 360000,
 						};
 					}
-				}
 
-				// Fallback for unknown endpoints
-				throw new Error(`Mock request handler not implemented for: ${method} ${url}`);
+					if (url?.includes('/api/v2/account')) {
+						if (url.includes('/variables')) {
+							return {
+								uid: 'mock-account-uid',
+								variables: [
+									{ name: 'COMPANY_NAME', value: 'Mock Company' },
+									{ name: 'TIMEZONE', value: 'UTC' },
+									{ name: 'API_VERSION', value: 'v2' },
+								],
+							};
+						} else {
+							return {
+								uid: 'mock-account-uid',
+								name: 'Mock Datto RMM Account',
+								companyName: 'Mock Company Inc.',
+								timezone: 'UTC',
+								dateCreated: new Date().toISOString(),
+								apiVersion: 'v2',
+								features: ['monitoring', 'automation', 'patching'],
+							};
+						}
+					}
+
+					throw new Error(`Mock request handler not implemented for: ${method} ${url}`);
+				}
 			},
 			requestOAuth2: async (name: string, options: any) => {
-				// This simulates n8n's OAuth2 handling
-				console.log(`\n🔑 OAuth2 request: ${name}`);
-				console.log('⚙️ Options:', JSON.stringify(options, null, 2));
+				// Implement proper Datto RMM OAuth 2.0 flow
+				console.log(`\n🔑 OAuth2 request for: ${name}`);
+				console.log(
+					'⚙️ Request details:',
+					JSON.stringify(
+						{
+							method: options.method,
+							url: options.url,
+							hasBody: !!options.body,
+						},
+						null,
+						2,
+					),
+				);
 
-				// Check if we have a cached token
+				// Check if we have a valid cached token (tokens expire after 100 hours)
 				if (tokenCache.token && tokenCache.expiresAt && Date.now() < tokenCache.expiresAt) {
-					console.log('📝 Using cached token');
+					console.log('📝 Using cached OAuth token');
 					return mockContext.helpers.request({
 						...options,
 						headers: {
@@ -140,28 +178,44 @@ function createMockExecuteFunctions(
 					});
 				}
 
-				// Acquire new token
-				console.log('🔄 Acquiring new OAuth token...');
-				const tokenResponse = await mockContext.helpers.request({
-					method: 'POST',
-					url: '/auth/oauth/token',
-					headers: {
-						'Content-Type': 'application/x-www-form-urlencoded',
-						Authorization:
-							'Basic ' +
-							Buffer.from(`${MOCK_CREDENTIALS.clientId}:${MOCK_CREDENTIALS.clientSecret}`).toString(
-								'base64',
-							),
-					},
-					body: `grant_type=password&username=${MOCK_CREDENTIALS.username}&password=${MOCK_CREDENTIALS.password}`,
-				});
+				// Acquire new token using Datto RMM OAuth 2.0 Resource Owner Password Credentials flow
+				console.log('🔄 Acquiring new OAuth token via Datto RMM API...');
 
-				// Make the actual request with the token
+				try {
+					const tokenResponse = await mockContext.helpers.request({
+						method: 'POST',
+						url: '/auth/oauth/token',
+						headers: {
+							'Content-Type': 'application/x-www-form-urlencoded',
+							Authorization: `Basic ${Buffer.from('public-client:public').toString('base64')}`,
+						},
+						body: `grant_type=password&username=${CREDENTIALS.apiKey}&password=${CREDENTIALS.apiSecret}`,
+					});
+
+					if (tokenResponse.access_token) {
+						// Cache the token (Datto RMM tokens expire after 100 hours)
+						const expiresInMs = (tokenResponse.expires_in || 360000) * 1000; // Convert seconds to milliseconds
+						tokenCache = {
+							token: tokenResponse.access_token,
+							expiresAt: Date.now() + expiresInMs,
+						};
+						console.log(
+							`✅ OAuth token acquired successfully (expires in ${Math.round(expiresInMs / 1000 / 60 / 60)} hours)`,
+						);
+					} else {
+						throw new Error('No access_token received in OAuth response');
+					}
+				} catch (error) {
+					console.error('❌ OAuth token acquisition failed:', error);
+					throw new Error(`OAuth authentication failed: ${error.message}`);
+				}
+
+				// Make the actual API request with the Bearer token
 				return mockContext.helpers.request({
 					...options,
 					headers: {
 						...options.headers,
-						Authorization: `Bearer ${tokenResponse.access_token}`,
+						Authorization: `Bearer ${tokenCache.token}`,
 					},
 				});
 			},
@@ -204,10 +258,7 @@ function createMockLoadOptionsFunctions(nodeParameters: INodeParameters): ILoadO
 	return {
 		getNodeParameter: (parameterName: string) => nodeParameters[parameterName],
 		getNode: () => MOCK_NODE,
-		getCredentials: async (type: string) =>
-			({
-				data: MOCK_CREDENTIALS,
-			}) as ICredentialsDecrypted,
+		getCredentials: async (type: string) => CREDENTIALS,
 		helpers: {
 			request: async (options: any) => {
 				console.log(`\n🔍 Load options request: ${options.method} ${options.url}`);
@@ -261,10 +312,10 @@ const TEST_SCENARIOS = {
  */
 async function testNode() {
 	console.log('🚀 Starting Datto RMM Node Local Testing\n');
-	console.log('📋 Using mock credentials:');
-	console.log(`   API URL: ${MOCK_CREDENTIALS.apiUrl}`);
-	console.log(`   API Key: ${(MOCK_CREDENTIALS.username as string).substring(0, 8)}...`);
-	console.log(`   Secret: ${(MOCK_CREDENTIALS.password as string).substring(0, 8)}...\n`);
+	console.log(`📋 Using ${USE_REAL_API ? 'real' : 'mock'} API with credentials:`);
+	console.log(`   API URL: ${CREDENTIALS.apiUrl}`);
+	console.log(`   API Key: ${(CREDENTIALS.apiKey as string).substring(0, 8)}...`);
+	console.log(`   Secret: ${(CREDENTIALS.apiSecret as string).substring(0, 8)}...\n`);
 
 	// Create node instance
 	const node = new DattoRmm();
@@ -342,16 +393,22 @@ async function testNode() {
 
 // Run the tests if this file is executed directly
 if (require.main === module) {
-	// Check if credentials are configured
-	if (
-		MOCK_CREDENTIALS.username === 'your-api-key-here' ||
-		MOCK_CREDENTIALS.password === 'your-secret-key-here'
-	) {
-		console.error('❌ Please configure your Datto RMM credentials in the MOCK_CREDENTIALS object');
-		console.error('📝 Edit the script and replace:');
-		console.error('   - apiUrl: Your Datto RMM API URL');
-		console.error('   - username: Your API Key');
-		console.error('   - password: Your API Secret Key');
+	// Check if credentials are configured in environment variables
+	if (!process.env.DATTO_API_KEY || !process.env.DATTO_API_SECRET) {
+		console.error('❌ Please configure your Datto RMM credentials in the .env file');
+		console.error('📝 Add the following to your .env file in the project root:');
+		console.error('');
+		console.error('   # Datto RMM API Credentials');
+		console.error('   DATTO_API_KEY=your-api-key-here');
+		console.error('   DATTO_API_SECRET=your-api-secret-here');
+		console.error('');
+		console.error('   # Optional: API Base URL (if different from default)');
+		console.error('   DATTO_API_BASE_URL=https://your-instance.centrastage.net');
+		console.error('');
+		console.error('💡 Current values found:');
+		console.error(`   DATTO_API_KEY: ${process.env.DATTO_API_KEY ? '✓ Set' : '❌ Missing'}`);
+		console.error(`   DATTO_API_SECRET: ${process.env.DATTO_API_SECRET ? '✓ Set' : '❌ Missing'}`);
+		console.error(`   DATTO_API_BASE_URL: ${process.env.DATTO_API_BASE_URL || '❌ Using default'}`);
 		process.exit(1);
 	}
 

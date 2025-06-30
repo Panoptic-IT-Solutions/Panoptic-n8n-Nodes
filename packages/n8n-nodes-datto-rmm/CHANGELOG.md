@@ -1,5 +1,17 @@
 # n8n-nodes-datto-rmm
 
+## 0.4.0-alpha.3
+
+### Patch Changes
+
+- **Fix OAuth2 URL parsing error in production**
+  - Removed problematic `={{$self.apiUrl}}` expression from OAuth2 credentials that caused "Invalid URL" errors in production n8n
+  - Implemented manual OAuth2 handling with proper Resource Owner Password Credentials flow
+  - Simplified credentials to use direct `apiKey` and `apiSecret` fields instead of complex OAuth2 extension
+  - Fixed URL construction issues in API requests using `baseURL` parameter
+  - Enhanced local testing infrastructure to support new credential structure
+  - All OAuth2 functionality now works correctly in both local testing and production environments
+
 ## 0.4.0-alpha.1
 
 ### Minor Changes
