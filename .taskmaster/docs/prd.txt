@@ -1,0 +1,195 @@
+# Datto RMM Node Enhancement - Product Requirements Document
+
+<context>
+# Overview  
+The Datto RMM Node Enhancement project aims to transform the current basic Datto RMM n8n node from a minimal 100-line prototype (supporting only 1 resource with 1 operation) into a comprehensive, production-ready integration that matches the quality and functionality of the existing Autotask node. 
+
+This enhancement solves the problem of limited Datto RMM integration capabilities within n8n workflows, providing IT professionals and managed service providers with robust automation capabilities for device management, monitoring, alerting, and remote administration tasks.
+
+The enhanced node will serve MSPs, IT administrators, and automation engineers who need to integrate Datto RMM operations into their n8n workflows for comprehensive IT infrastructure management and monitoring automation.
+
+# Core Features  
+**Resource Coverage Expansion**
+- Transform from 1 resource (Account) to 8+ comprehensive resources
+- Support for Account, Device, Site, Alert, Job, Audit, System, and Filter resources
+- Each resource will provide multiple operations (get, create, update, delete, list, etc.)
+- Complete API coverage matching the OpenAPI specification capabilities
+
+**Modular Architecture Implementation**
+- Implement resource-specific modules following the Autotask node pattern
+- Separate execution handlers for each resource type
+- Shared helper functions and utilities for common operations
+- Consistent error handling and response formatting across all resources
+
+**Advanced Parameter Support**
+- Dynamic field selection through resource mapping
+- Pagination support for large datasets
+- Complex filtering and query parameter handling
+- Load options for dropdown population from live API data
+
+**Type Safety and Validation**
+- Full TypeScript integration using existing comprehensive type definitions
+- Runtime parameter validation using pre-built type interfaces
+- Comprehensive error handling with specific error messages
+- Type-safe request/response handling with organized barrel exports
+
+# User Experience  
+**Primary User Personas:**
+- MSP Technicians: Need automated device monitoring and alerting workflows
+- IT Administrators: Require bulk device management and reporting automation  
+- Workflow Developers: Want comprehensive API access within n8n for custom integrations
+
+**Key User Flows:**
+1. Device Management Flow: Select device resource → Choose operation (get/update/manage) → Configure parameters → Execute
+2. Monitoring Flow: Select alert resource → Configure filtering → Set up automated responses
+3. Bulk Operations Flow: Use pagination → Process large datasets → Handle results efficiently
+4. Site Management Flow: Manage multiple client sites → Configure settings → Deploy changes
+
+**UI/UX Considerations:**
+- Consistent parameter grouping and organization
+- Intuitive operation naming following n8n conventions
+- Progressive disclosure of advanced options
+- Clear help text and descriptions for all parameters
+- Visual feedback for validation and errors
+</context>
+
+<PRD>
+# Technical Architecture  
+**System Components:**
+- Main Node Class: Enhanced DattoRmm.node.ts with modular resource routing
+- Resource Modules: Individual modules for each resource type (Account, Device, Site, Alert, Job, Audit, System, Filter)
+- Helper Libraries: HTTP client, error handling, parameter validation, pagination utilities
+- Type Definitions: Comprehensive TypeScript interfaces from OpenAPI specification
+
+**Data Models:**
+- Utilize comprehensive existing type system with organized barrel exports
+- Resource-specific type definitions already available (account.types, device.types, etc.)
+- Base types for auth, HTTP, errors, and pagination already implemented
+- Clean import structure through index.ts barrel pattern
+
+**APIs and Integrations:**
+- Datto RMM v2 REST API integration
+- OAuth 2.0 / API key authentication support
+- Rate limiting and retry logic implementation
+- Comprehensive endpoint coverage (50+ operations across 8 resources)
+
+**Infrastructure Requirements:**
+- n8n workflow framework integration
+- Credential management for API authentication
+- Error logging and debugging capabilities
+- Direct integration with existing comprehensive type system
+
+# Development Roadmap  
+**Phase 1: Foundation Infrastructure (MVP)**
+- Update main node class with modular architecture
+- Implement core helper functions (HTTP client, error handler) using existing base types
+- Create resource definition structure leveraging organized type system
+- Enhance Account resource with full operation support
+- Implement basic Device resource operations using device.types
+
+**Phase 2: Core Resource Implementation**
+- Complete Device resource with all operations
+- Implement Site resource management
+- Add Alert resource with filtering capabilities
+- Create basic Job resource operations
+- Implement resource mapping functionality
+
+**Phase 3: Advanced Features**
+- Complete Job resource with result handling
+- Implement Audit resource operations
+- Add System resource endpoints
+- Create Filter resource management
+- Implement load options for dynamic dropdowns
+
+**Phase 4: Polish and Optimization**
+- Comprehensive error handling enhancement leveraging existing error types
+- Performance optimization and caching
+- Advanced parameter validation using type system
+- Documentation and help text refinement
+- Integration testing and validation
+
+# Logical Dependency Chain
+**Foundation First (Phase 1):**
+- Main node architecture must be established before any resource implementation
+- HTTP helper and error handling using existing base types are prerequisites for all operations
+- Account resource serves as the template leveraging existing account.types
+- Resource definition structure enables consistent implementation with ready-made type system
+
+**Core Resources (Phase 2):**
+- Device resource is most critical for user value and should be prioritized
+- Site resource provides context for device operations
+- Alert resource builds on device/site foundation
+- Resource mapping enables advanced field selection across all resources
+
+**Advanced Integration (Phase 3):**
+- Job resource requires device operations as prerequisite
+- Audit operations depend on device identification
+- System resource provides supportive functionality
+- Load options require established API communication patterns
+
+**Production Readiness (Phase 4):**
+- Error handling refinement improves all previous implementations
+- Performance optimization benefits all resource operations
+- Validation enhancements secure all user inputs
+- Documentation completion enables user adoption
+
+# Risks and Mitigations  
+**Technical Challenges:**
+- Risk: API rate limiting may impact user experience
+- Mitigation: Implement intelligent retry logic and request queuing
+
+- Risk: Complex parameter mapping between n8n and existing types
+- Mitigation: Create clear mapping utilities and validation helpers
+
+**MVP Definition Risks:**
+- Risk: Feature scope creep may delay initial delivery
+- Mitigation: Strict adherence to Phase 1 scope focusing on Account + Device resources only
+
+- Risk: User expectations may exceed initial MVP capabilities
+- Mitigation: Clear communication about phased approach and roadmap transparency
+
+**Resource Constraints:**
+- Risk: Limited testing environment access may impact quality
+- Mitigation: Implement comprehensive unit testing and mock API responses
+
+- Risk: Documentation and help text creation time may be underestimated
+- Mitigation: Create documentation templates and reusable content patterns
+
+**Integration Compatibility:**
+- Risk: n8n framework updates may impact node functionality
+- Mitigation: Follow n8n best practices and maintain compatibility with current LTS versions
+
+- Risk: Datto RMM API changes may break existing functionality
+- Mitigation: Implement versioned API support and graceful degradation
+
+# Appendix  
+**Research Findings:**
+- Current Datto RMM node has 100 lines vs Autotask node's 555+ lines
+- Comprehensive type system already implemented with 8+ resource types and base utilities
+- Existing barrel export pattern (index.ts) enables clean modular implementation
+- Autotask node pattern provides proven architecture for complex API integrations
+- All necessary types (auth, HTTP, errors, pagination, resources) are already available
+
+**Technical Specifications:**
+- Minimum n8n version: Latest LTS
+- Node.js version compatibility: 18+
+- Required dependencies: Existing n8n-workflow package
+- Type system: Comprehensive pre-built types with barrel exports
+
+**API Coverage Mapping:**
+- Account Resource: 8 operations (get, variables, users, sites, devices, components, alerts)
+- Device Resource: 9 operations (get, getById, getByMac, alerts, move, UDF, warranty, quickjob)
+- Site Resource: 8 operations (CRUD, variables, settings, devices, alerts)
+- Alert Resource: 4 operations (get, resolve, filtering, management)
+- Job Resource: 6 operations (create, get, results, stdout, stderr, components)
+- Audit Resource: 4 operations (device, printer, ESXi, software)
+- System Resource: 3 operations (status, rate limits, pagination)
+- Filter Resource: 2 operations (default, custom)
+
+**Success Metrics:**
+- API operation coverage: 50+ operations vs current 1
+- Resource coverage: 8 resources vs current 1
+- Code maintainability: Modular architecture with <200 lines per resource
+- User adoption: Measurable increase in Datto RMM node usage
+- Error reduction: <5% error rate in production workflows
+</PRD> 

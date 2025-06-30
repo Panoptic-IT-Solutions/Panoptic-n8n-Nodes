@@ -1,26 +1,39 @@
-import {
+import { NodeConnectionType, type ResourceMapperFields, NodeOperationError } from 'n8n-workflow';
+import type {
 	IExecuteFunctions,
+	ILoadOptionsFunctions,
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
 } from 'n8n-workflow';
 
+// Import resource execute functions
+import { executeAccountOperation } from './resources/account/execute';
+
+// Import resource definitions and field descriptions
+import { RESOURCE_DEFINITIONS } from './resources/definitions';
+import { accountFields } from './resources/account/description';
+import { addOperationsToResource } from './helpers/resource-operations.helper';
+import { getResourceMapperFields } from './helpers/resourceMapper';
+
+/**
+ * Datto RMM node implementation
+ */
 export class DattoRmm implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Datto RMM',
 		name: 'dattoRmm',
 		icon: 'file:datto-rmm.svg',
-		group: ['sources'],
+		group: ['transform'],
+		usableAsTool: true,
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-		description: 'Get data from the Datto RMM API',
+		description: 'Interact with Datto RMM API to manage devices, sites, alerts, and monitoring',
 		defaults: {
 			name: 'Datto RMM',
 		},
-		// @ts-expect-error (n8n-nodes-base linter rule requires this to be 'main')
-		inputs: ['main'],
-		// @ts-expect-error (n8n-nodes-base linter rule requires this to be 'main')
-		outputs: ['main'],
+		inputs: [NodeConnectionType.Main],
+		outputs: [NodeConnectionType.Main],
 		credentials: [
 			{
 				name: 'dattoRmmApi',
@@ -40,62 +53,84 @@ export class DattoRmm implements INodeType {
 				name: 'resource',
 				type: 'options',
 				noDataExpression: true,
-				options: [
-					{
-						name: 'Account',
-						value: 'account',
-					},
-				],
+				options: RESOURCE_DEFINITIONS,
 				default: 'account',
+				required: true,
 			},
-			{
-				displayName: 'Operation',
-				name: 'operation',
-				type: 'options',
-				noDataExpression: true,
-				displayOptions: {
-					show: {
-						resource: ['account'],
-					},
-				},
-				options: [
-					{
-						name: 'Get',
-						value: 'get',
-						description: 'Get account information',
-						action: 'Get account information',
-					},
-				],
-				default: 'get',
-			},
+			// Add resource-specific property definitions
+			...addOperationsToResource(accountFields, { resourceName: 'account' }),
 		],
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
-		const items = this.getInputData();
-		const returnData: INodeExecutionData[] = [];
+		const resource = this.getNodeParameter('resource', 0) as string;
 
-		for (let i = 0; i < items.length; i++) {
-			const resource = this.getNodeParameter('resource', i);
-			const operation = this.getNodeParameter('operation', i);
+		// Handle resource-specific operations using switch statement
+		switch (resource) {
+			case 'account':
+				return executeAccountOperation.call(this);
 
-			if (resource === 'account' && operation === 'get') {
-				// Placeholder implementation
-				const responseData = {
-					message: 'Datto RMM node placeholder - implementation coming soon',
-					resource,
-					operation,
-				};
+			// TODO: Add other resources as they are implemented
+			// case 'device':
+			//     return executeDeviceOperation.call(this);
+			// case 'site':
+			//     return executeSiteOperation.call(this);
+			// case 'alert':
+			//     return executeAlertOperation.call(this);
+			// case 'job':
+			//     return executeJobOperation.call(this);
+			// case 'audit':
+			//     return executeAuditOperation.call(this);
+			// case 'system':
+			//     return executeSystemOperation.call(this);
+			// case 'filter':
+			//     return executeFilterOperation.call(this);
 
-				returnData.push({
-					json: responseData,
-					pairedItem: {
-						item: i,
-					},
-				});
-			}
+			default:
+				throw new NodeOperationError(
+					this.getNode(),
+					`Resource ${resource} is not supported yet. Please check back later or contribute to the implementation.`,
+				);
 		}
-
-		return [returnData];
 	}
+
+	methods = {
+		resourceMapping: {
+			async getFields(this: ILoadOptionsFunctions): Promise<ResourceMapperFields> {
+				const resource = this.getNodeParameter('resource', 0) as string;
+				return getResourceMapperFields.call(this, resource);
+			},
+		},
+		loadOptions: {
+			async getResources(this: ILoadOptionsFunctions) {
+				// Return available resources for dynamic loading
+				return RESOURCE_DEFINITIONS.map((resource) => ({
+					name: resource.name,
+					value: resource.value,
+				}));
+			},
+
+			async getSelectColumns(this: ILoadOptionsFunctions) {
+				const resource = this.getNodeParameter('resource', 0) as string;
+
+				try {
+					// Get fields using the same function that powers the resource mapper
+					const { fields } = await getResourceMapperFields.call(this, resource);
+
+					// Format fields for multiOptions dropdown
+					return fields.map((field) => ({
+						name: field.displayName || field.id,
+						value: field.id,
+					}));
+				} catch (error) {
+					console.error(`Error loading select columns options: ${error.message}`);
+					return [];
+				}
+			},
+
+			// TODO: Add more dynamic loading functions as needed
+			// async getQueryableEntities(this: ILoadOptionsFunctions) { ... }
+			// async getEntityFields(this: ILoadOptionsFunctions) { ... }
+		},
+	};
 }
