@@ -1,4 +1,4 @@
-import type { ICredentialTestRequest, ICredentialType, INodeProperties } from 'n8n-workflow';
+import type { ICredentialType, INodeProperties } from 'n8n-workflow';
 
 export class DattoRmmApi implements ICredentialType {
 	name = 'dattoRmmApi';
@@ -21,10 +21,10 @@ export class DattoRmmApi implements ICredentialType {
 			type: 'string',
 			required: true,
 			default: '',
-			description: 'Your Datto RMM API Key',
+			description: 'Your Datto RMM API Key (Username for OAuth2)',
 		},
 		{
-			displayName: 'API Secret Key',
+			displayName: 'API Secret',
 			name: 'apiSecret',
 			type: 'string',
 			typeOptions: {
@@ -32,15 +32,10 @@ export class DattoRmmApi implements ICredentialType {
 			},
 			required: true,
 			default: '',
-			description: 'Your Datto RMM API Secret Key',
+			description: 'Your Datto RMM API Secret Key (Password for OAuth2)',
 		},
 	];
 
-	test: ICredentialTestRequest = {
-		request: {
-			baseURL: '={{$credentials.apiUrl}}',
-			url: '/api/v2/account',
-			method: 'GET',
-		},
-	};
+	// Note: Credential validation happens during node execution
+	// via our custom OAuth2 helper that handles the password grant flow
 }
