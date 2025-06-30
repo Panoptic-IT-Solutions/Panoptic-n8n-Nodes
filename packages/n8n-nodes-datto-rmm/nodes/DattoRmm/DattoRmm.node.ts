@@ -9,10 +9,14 @@ import type {
 
 // Import resource execute functions
 import { executeAccountOperation } from './resources/account/execute';
+import { executeDeviceOperation } from './resources/device/execute';
+import { executeSiteOperation } from './resources/site/execute';
 
 // Import resource definitions and field descriptions
 import { RESOURCE_DEFINITIONS } from './resources/definitions';
 import { accountFields } from './resources/account/description';
+import { deviceFields } from './resources/device/description';
+import { siteFields } from './resources/site/description';
 import { addOperationsToResource } from './helpers/resource-operations.helper';
 import { getResourceMapperFields } from './helpers/resourceMapper';
 
@@ -59,6 +63,8 @@ export class DattoRmm implements INodeType {
 			},
 			// Add resource-specific property definitions
 			...addOperationsToResource(accountFields, { resourceName: 'account' }),
+			...addOperationsToResource(deviceFields, { resourceName: 'device' }),
+			...addOperationsToResource(siteFields, { resourceName: 'site' }),
 		],
 	};
 
@@ -70,11 +76,13 @@ export class DattoRmm implements INodeType {
 			case 'account':
 				return executeAccountOperation.call(this);
 
+			case 'device':
+				return executeDeviceOperation.call(this);
+
+			case 'site':
+				return executeSiteOperation.call(this);
+
 			// TODO: Add other resources as they are implemented
-			// case 'device':
-			//     return executeDeviceOperation.call(this);
-			// case 'site':
-			//     return executeSiteOperation.call(this);
 			// case 'alert':
 			//     return executeAlertOperation.call(this);
 			// case 'job':
