@@ -31,13 +31,13 @@ export class DattoRmmApi implements ICredentialType {
 			displayName: 'Authorization URL',
 			name: 'authUrl',
 			type: 'hidden',
-			default: '={{$self.apiUrl.replace(/\/+$/, "").replace(/\/api\/?$/, "")}}/auth/oauth/token',
+			default: '={{$self.apiUrl.replace(/\\/+$/, "").replace(/\\/api\\/?$/, "")}}/auth/oauth/token',
 		},
 		{
 			displayName: 'Access Token URL',
 			name: 'accessTokenUrl',
 			type: 'hidden',
-			default: '={{$self.apiUrl.replace(/\/+$/, "").replace(/\/api\/?$/, "")}}/auth/oauth/token',
+			default: '={{$self.apiUrl.replace(/\\/+$/, "").replace(/\\/api\\/?$/, "")}}/auth/oauth/token',
 		},
 		{
 			displayName: 'Client ID',
@@ -111,7 +111,7 @@ export class DattoRmmApi implements ICredentialType {
 
 	test: ICredentialTestRequest = {
 		request: {
-			baseURL: '={{$credentials.apiUrl.replace(/\/+$/, "").replace(/\/api\/?$/, "")}}',
+			baseURL: '={{$credentials.apiUrl.replace(/\\/+$/, "").replace(/\\/api\\/?$/, "")}}',
 			url: '/api/v2/account',
 			method: 'GET',
 		},
