@@ -1,5 +1,22 @@
 # n8n-nodes-datto-rmm
 
+## 0.4.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Implement proper n8n OAuth2 authentication system
+  - **OAuth2 Credentials**: Replaced manual token handling with n8n's built-in OAuth2 system
+  - **Resource Owner Password Credentials**: Properly configured for Datto RMM's `grant_type=password` flow
+  - **JSON Response Parsing**: Fixed critical bug where API responses were sometimes returned as strings
+  - **Token Management**: Automatic token acquisition, caching, and refresh handled by n8n
+  - **Authentication Method**: All API requests now use `requestWithAuthentication` instead of manual token headers
+  - **Community Standards**: Implementation follows n8n OAuth2 best practices from community guidelines
+  - **Production Ready**: Tested with real Datto RMM API (Panoptic IT Solutions account)
+
+  This change ensures reliable authentication, better security, and consistent user experience with other n8n OAuth2 nodes.
+
+  **Migration**: Users will need to reconfigure their Datto RMM credentials using the new OAuth2 flow (API Key as Username, API Secret as Password).
+
 ## 0.4.0-alpha.5
 
 ### Patch Changes

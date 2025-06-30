@@ -28,11 +28,21 @@ dotenv.config({ path: '../../.env' }); // Load from project root .env file
 // Configuration
 const USE_REAL_API = process.env.TEST_USE_REAL_API !== 'false'; // Default to true, set to 'false' to use mocks
 
-// Credentials - loaded from environment variables
+// Credentials - loaded from environment variables (now with OAuth2 structure)
 const CREDENTIALS: ICredentialDataDecryptedObject = {
 	apiUrl: process.env.DATTO_API_BASE_URL || 'https://pinotage-api.centrastage.net',
-	apiKey: process.env.DATTO_API_KEY || '',
-	apiSecret: process.env.DATTO_API_SECRET || '',
+	username: process.env.DATTO_API_KEY || '', // API Key goes in username for OAuth2 password flow
+	password: process.env.DATTO_API_SECRET || '', // API Secret goes in password for OAuth2 password flow
+	grantType: 'password',
+	clientId: 'public-client',
+	clientSecret: 'public',
+	// Mock OAuth2 token data (simulates what n8n would store after OAuth2 flow)
+	oauthTokenData: {
+		access_token: '',
+		token_type: 'Bearer',
+		expires_in: 360000,
+		acquired_at: 0,
+	},
 };
 
 // Mock node definition
@@ -52,8 +62,6 @@ function createMockExecuteFunctions(
 	nodeParameters: INodeParameters,
 	inputData: INodeExecutionData[] = [{ json: {} }],
 ): IExecuteFunctions {
-	let tokenCache: { token?: string; expiresAt?: number } = {};
-
 	const mockContext: IExecuteFunctions = {
 		getInputData: () => inputData,
 		getNodeParameter: (parameterName: string, itemIndex: number) => {
@@ -113,10 +121,6 @@ function createMockExecuteFunctions(
 					if (url?.includes('/auth/oauth/token')) {
 						console.log('🔐 OAuth token request detected');
 						const mockToken = 'mock-access-token-' + Date.now();
-						tokenCache = {
-							token: mockToken,
-							expiresAt: Date.now() + 100 * 60 * 60 * 1000,
-						};
 						return {
 							access_token: mockToken,
 							token_type: 'Bearer',
@@ -150,9 +154,9 @@ function createMockExecuteFunctions(
 					throw new Error(`Mock request handler not implemented for: ${method} ${url}`);
 				}
 			},
-			requestOAuth2: async (name: string, options: any) => {
-				// Implement proper Datto RMM OAuth 2.0 flow
-				console.log(`\n🔑 OAuth2 request for: ${name}`);
+			requestWithAuthentication: async (credentialsType: string, options: any) => {
+				// Simulate n8n's OAuth2 authentication system
+				console.log(`\n🔑 Authenticated request for credentials: ${credentialsType}`);
 				console.log(
 					'⚙️ Request details:',
 					JSON.stringify(
@@ -166,56 +170,65 @@ function createMockExecuteFunctions(
 					),
 				);
 
-				// Check if we have a valid cached token (tokens expire after 100 hours)
-				if (tokenCache.token && tokenCache.expiresAt && Date.now() < tokenCache.expiresAt) {
-					console.log('📝 Using cached OAuth token');
-					return mockContext.helpers.request({
-						...options,
-						headers: {
-							...options.headers,
-							Authorization: `Bearer ${tokenCache.token}`,
-						},
-					});
-				}
+				// Check if we need to acquire/refresh OAuth2 token
+				const oauthData = CREDENTIALS.oauthTokenData as any;
+				if (
+					!oauthData?.access_token ||
+					oauthData.acquired_at + oauthData.expires_in * 1000 < Date.now()
+				) {
+					console.log('🔄 Acquiring new OAuth2 token via Datto RMM API...');
 
-				// Acquire new token using Datto RMM OAuth 2.0 Resource Owner Password Credentials flow
-				console.log('🔄 Acquiring new OAuth token via Datto RMM API...');
+					try {
+						const baseUrl = (CREDENTIALS.apiUrl as string)
+							.replace(/\/+$/, '')
+							.replace(/\/api\/?$/, '');
+						const tokenResponse = await mockContext.helpers.request({
+							method: 'POST',
+							url: `${baseUrl}/auth/oauth/token`,
+							headers: {
+								'Content-Type': 'application/x-www-form-urlencoded',
+								Authorization: `Basic ${Buffer.from(`${CREDENTIALS.clientId}:${CREDENTIALS.clientSecret}`).toString('base64')}`,
+							},
+							body: `grant_type=${CREDENTIALS.grantType}&username=${CREDENTIALS.username}&password=${CREDENTIALS.password}`,
+							json: true,
+						});
 
-				try {
-					const tokenResponse = await mockContext.helpers.request({
-						method: 'POST',
-						url: '/auth/oauth/token',
-						headers: {
-							'Content-Type': 'application/x-www-form-urlencoded',
-							Authorization: `Basic ${Buffer.from('public-client:public').toString('base64')}`,
-						},
-						body: `grant_type=password&username=${CREDENTIALS.apiKey}&password=${CREDENTIALS.apiSecret}`,
-					});
+						// Parse response if it's a string (handle the bug we found earlier)
+						let parsedResponse = tokenResponse;
+						if (typeof tokenResponse === 'string') {
+							console.log('📋 Response is string, parsing JSON...');
+							parsedResponse = JSON.parse(tokenResponse);
+						}
 
-					if (tokenResponse.access_token) {
-						// Cache the token (Datto RMM tokens expire after 100 hours)
-						const expiresInMs = (tokenResponse.expires_in || 360000) * 1000; // Convert seconds to milliseconds
-						tokenCache = {
-							token: tokenResponse.access_token,
-							expiresAt: Date.now() + expiresInMs,
-						};
-						console.log(
-							`✅ OAuth token acquired successfully (expires in ${Math.round(expiresInMs / 1000 / 60 / 60)} hours)`,
-						);
-					} else {
-						throw new Error('No access_token received in OAuth response');
+						if (parsedResponse.access_token) {
+							// Update credentials with new token data
+							(CREDENTIALS.oauthTokenData as any) = {
+								access_token: parsedResponse.access_token,
+								token_type: parsedResponse.token_type || 'Bearer',
+								expires_in: parsedResponse.expires_in || 360000,
+								acquired_at: Date.now(),
+							};
+							console.log(
+								`✅ OAuth2 token acquired successfully (expires in ${Math.round(parsedResponse.expires_in / 60 / 60)} hours)`,
+							);
+						} else {
+							throw new Error('No access_token received from OAuth2 response');
+						}
+					} catch (error) {
+						console.error('❌ OAuth2 token acquisition failed:', error);
+						throw new Error(`OAuth2 authentication failed: ${error.message}`);
 					}
-				} catch (error) {
-					console.error('❌ OAuth token acquisition failed:', error);
-					throw new Error(`OAuth authentication failed: ${error.message}`);
+				} else {
+					console.log('📝 Using cached OAuth2 token');
 				}
 
 				// Make the actual API request with the Bearer token
+				const updatedOauthData = CREDENTIALS.oauthTokenData as any;
 				return mockContext.helpers.request({
 					...options,
 					headers: {
 						...options.headers,
-						Authorization: `Bearer ${tokenCache.token}`,
+						Authorization: `${updatedOauthData.token_type} ${updatedOauthData.access_token}`,
 					},
 				});
 			},
@@ -314,8 +327,8 @@ async function testNode() {
 	console.log('🚀 Starting Datto RMM Node Local Testing\n');
 	console.log(`📋 Using ${USE_REAL_API ? 'real' : 'mock'} API with credentials:`);
 	console.log(`   API URL: ${CREDENTIALS.apiUrl}`);
-	console.log(`   API Key: ${(CREDENTIALS.apiKey as string).substring(0, 8)}...`);
-	console.log(`   Secret: ${(CREDENTIALS.apiSecret as string).substring(0, 8)}...\n`);
+	console.log(`   API Key: ${(CREDENTIALS.username as string).substring(0, 8)}...`);
+	console.log(`   Secret: ${(CREDENTIALS.password as string).substring(0, 8)}...\n`);
 
 	// Create node instance
 	const node = new DattoRmm();
