@@ -1,5 +1,15 @@
 # n8n-nodes-datto-rmm
 
+## 0.4.4
+
+### Patch Changes
+
+- Add missing scope field to OAuth2 credentials configuration
+  - Added hidden 'scope' field with default value 'default' to prevent n8n OAuth2 UI errors
+  - This field was missing from the published v0.4.3 but is required for proper n8n OAuth2 functionality
+  - Without this field, users may experience OAuth2 configuration issues in the n8n UI
+  - Completes the OAuth2 authentication fix started in v0.4.3
+
 ## 0.4.3
 
 ### Patch Changes
