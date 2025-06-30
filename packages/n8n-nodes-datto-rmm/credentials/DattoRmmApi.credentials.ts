@@ -65,6 +65,12 @@ export class DattoRmmApi implements ICredentialType {
 			type: 'hidden',
 			default: '={{$credentials.apiUrl}}/auth/oauth/token',
 		},
+		{
+			displayName: 'Scope',
+			name: 'scope',
+			type: 'hidden',
+			default: 'default',
+		},
 	];
 	test: ICredentialTestRequest = {
 		request: {

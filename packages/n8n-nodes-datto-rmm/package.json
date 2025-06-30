@@ -33,7 +33,8 @@
 		"test:watch": "jest --watch",
 		"test:coverage": "jest --coverage",
 		"test:local": "ts-node scripts/test-node-locally.ts",
-		"test:oauth2": "ts-node scripts/test-oauth2-flow.ts"
+		"test:oauth2": "ts-node scripts/test-oauth2-flow.ts",
+		"test:credentials": "ts-node scripts/test-n8n-credentials.ts"
 	},
 	"files": [
 		"dist"
