@@ -40,11 +40,6 @@ export class DattoRmm implements INodeType {
 				required: true,
 			},
 		],
-		// @ts-expect-error: 'authentication' is a valid property for INodeTypeDescription
-		authentication: {
-			type: 'oauth2',
-			name: 'dattoRmmApi',
-		},
 		requestDefaults: {
 			baseURL: '={{$credentials.apiUrl}}',
 			headers: {

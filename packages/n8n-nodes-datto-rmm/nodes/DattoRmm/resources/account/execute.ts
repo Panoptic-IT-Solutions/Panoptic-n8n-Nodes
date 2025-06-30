@@ -1,49 +1,7 @@
-import type { IExecuteFunctions, INodeExecutionData, IHttpRequestMethods } from 'n8n-workflow';
+import type { IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 import { handleErrors } from '../../helpers/errorHandler';
-
-/**
- * Make authenticated API request to Datto RMM using n8n's OAuth2 system
- */
-async function makeApiRequest(
-	context: IExecuteFunctions,
-	endpoint: string,
-	method: IHttpRequestMethods = 'GET',
-) {
-	// Get credentials to access the API URL
-	const credentials = await context.getCredentials('dattoRmmApi');
-	const apiUrl = credentials.apiUrl as string;
-
-	// Normalize API URL - remove trailing slashes and /api suffix
-	const normalizedUrl = apiUrl
-		.trim()
-		.replace(/\/+$/, '') // Remove trailing slashes
-		.replace(/\/api\/?$/, ''); // Remove /api or /api/ suffix
-
-	// Use n8n's built-in OAuth2 request helper
-	const response = await context.helpers.requestWithAuthentication.call(context, 'dattoRmmApi', {
-		method,
-		url: endpoint,
-		baseURL: normalizedUrl,
-		headers: {
-			Accept: 'application/json',
-			'Content-Type': 'application/json',
-		},
-		json: true, // Ensure response is parsed as JSON
-	});
-
-	// Handle the case where n8n sometimes returns JSON as a string
-	if (typeof response === 'string') {
-		try {
-			return JSON.parse(response);
-		} catch {
-			console.warn('Failed to parse string response as JSON:', response);
-			return response;
-		}
-	}
-
-	return response;
-}
+import { dattoRmmApiRequest } from '../../helpers/oauth2.helper';
 
 export async function executeAccountOperation(
 	this: IExecuteFunctions,
@@ -59,11 +17,11 @@ export async function executeAccountOperation(
 
 				switch (operation) {
 					case 'get':
-						responseData = await makeApiRequest(this, '/api/v2/account');
+						responseData = await dattoRmmApiRequest.call(this, 'GET', '/api/v2/account');
 						break;
 
 					case 'getVariables':
-						responseData = await makeApiRequest(this, '/api/v2/account/variables');
+						responseData = await dattoRmmApiRequest.call(this, 'GET', '/api/v2/account/variables');
 						break;
 
 					default:
