@@ -1,5 +1,12 @@
 # n8n-nodes-datto-rmm
 
+## 0.4.2
+
+### Patch Changes
+
+- ca84efd: Oauth fixes
+- ad06b31: Version Bump
+
 ## 0.4.1
 
 ### Patch Changes
