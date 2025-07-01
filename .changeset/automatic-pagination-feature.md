@@ -1,5 +1,5 @@
 ---
-"@panoptic-it-solutions/n8n-nodes-datto-rmm": minor
+"@panoptic-it-solutions/n8n-nodes-datto-rmm": patch
 ---
 
 Add automatic pagination support for all "get all" operations
