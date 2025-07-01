@@ -18,7 +18,7 @@ export async function executeAccountOperation(
 				switch (operation) {
 					case 'get':
 						{
-							responseData = await dattoRmmApiRequest.call(this, 'GET', '/account');
+							responseData = await dattoRmmApiRequest.call(this, 'GET', '/api/v2/account');
 						}
 						break;
 
@@ -77,7 +77,7 @@ export async function executeAccountOperation(
 							responseData = await dattoRmmApiRequest.call(
 								this,
 								'GET',
-								'/account/devices',
+								'/api/v2/account/devices',
 								{},
 								queryParams,
 							);
@@ -97,7 +97,7 @@ export async function executeAccountOperation(
 							responseData = await dattoRmmApiRequest.call(
 								this,
 								'GET',
-								'/account/users',
+								'/api/v2/account/users',
 								{},
 								queryParams,
 							);
@@ -117,7 +117,7 @@ export async function executeAccountOperation(
 							responseData = await dattoRmmApiRequest.call(
 								this,
 								'GET',
-								'/account/components',
+								'/api/v2/account/components',
 								{},
 								queryParams,
 							);
@@ -142,7 +142,7 @@ export async function executeAccountOperation(
 							responseData = await dattoRmmApiRequest.call(
 								this,
 								'GET',
-								'/account/alerts/open',
+								'/api/v2/account/alerts/open',
 								{},
 								queryParams,
 							);
@@ -167,7 +167,7 @@ export async function executeAccountOperation(
 							responseData = await dattoRmmApiRequest.call(
 								this,
 								'GET',
-								'/account/alerts/resolved',
+								'/api/v2/account/alerts/resolved',
 								{},
 								queryParams,
 							);
@@ -192,7 +192,7 @@ export async function executeAccountOperation(
 							responseData = await dattoRmmApiRequest.call(
 								this,
 								'GET',
-								'/account/sites',
+								'/api/v2/account/sites',
 								{},
 								queryParams,
 							);

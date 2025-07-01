@@ -20,7 +20,11 @@ export async function executeAlertOperation(
 						{
 							const alertUid = this.getNodeParameter('alertUid', i) as string;
 
-							responseData = await dattoRmmApiRequest.call(this, 'GET', `/alert/${alertUid}`);
+							responseData = await dattoRmmApiRequest.call(
+								this,
+								'GET',
+								`/api/v2/alert/${alertUid}`,
+							);
 						}
 						break;
 
@@ -38,7 +42,7 @@ export async function executeAlertOperation(
 							responseData = await dattoRmmApiRequest.call(
 								this,
 								'POST',
-								`/alert/${alertUid}/resolve`,
+								`/api/v2/alert/${alertUid}/resolve`,
 								body,
 							);
 						}
@@ -51,7 +55,7 @@ export async function executeAlertOperation(
 							responseData = await dattoRmmApiRequest.call(
 								this,
 								'POST',
-								`/alert/${alertUid}/mute`,
+								`/api/v2/alert/${alertUid}/mute`,
 								{},
 							);
 						}
@@ -64,7 +68,7 @@ export async function executeAlertOperation(
 							responseData = await dattoRmmApiRequest.call(
 								this,
 								'POST',
-								`/alert/${alertUid}/unmute`,
+								`/api/v2/alert/${alertUid}/unmute`,
 								{},
 							);
 						}

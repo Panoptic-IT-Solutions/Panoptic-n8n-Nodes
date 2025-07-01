@@ -193,7 +193,7 @@ export const accountFields: INodeProperties[] = [
 	// Resource Mapper for dynamic field selection
 	{
 		displayName: 'Fields to Include',
-		name: 'fieldsToInclude',
+		name: 'resourceMapper',
 		type: 'resourceMapper',
 		default: {
 			mappingMode: 'defineBelow',
