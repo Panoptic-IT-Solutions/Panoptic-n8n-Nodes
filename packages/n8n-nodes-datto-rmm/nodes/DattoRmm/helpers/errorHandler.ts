@@ -289,24 +289,27 @@ export function validateParamTypes(
 		// Format validation
 		if (rule.format && typeof value === 'string') {
 			switch (rule.format) {
-				case 'email':
+				case 'email': {
 					const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 					if (!emailRegex.test(value)) {
 						errors.push(`${field} must be a valid email address`);
 					}
 					break;
-				case 'url':
+				}
+				case 'url': {
 					try {
 						new URL(value);
 					} catch {
 						errors.push(`${field} must be a valid URL`);
 					}
 					break;
-				case 'date':
+				}
+				case 'date': {
 					if (isNaN(Date.parse(value))) {
 						errors.push(`${field} must be a valid date`);
 					}
 					break;
+				}
 			}
 		}
 	}

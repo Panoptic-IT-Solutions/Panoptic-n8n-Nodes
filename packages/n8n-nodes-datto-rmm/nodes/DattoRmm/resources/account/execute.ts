@@ -11,7 +11,23 @@ export async function executeAccountOperation(
 	const returnData: INodeExecutionData[] = [];
 
 	return handleErrors(this, async () => {
-		for (let i = 0; i < items.length; i++) {
+		// For operations that retrieve lists or account info,
+		// execute only once regardless of input count to avoid duplicates
+		const listOperations = [
+			'get',
+			'getDevices',
+			'getUsers',
+			'getComponents',
+			'getOpenAlerts',
+			'getResolvedAlerts',
+			'getSites',
+			'getVariables',
+		];
+		const executeOnce = listOperations.includes(operation);
+		const itemsToProcess = executeOnce ? [items[0]] : items;
+
+		for (let i = 0; i < itemsToProcess.length; i++) {
+			const itemIndex = executeOnce ? 0 : i;
 			try {
 				let responseData;
 
@@ -24,7 +40,7 @@ export async function executeAccountOperation(
 
 					case 'getVariables':
 						{
-							const retrieveAll = this.getNodeParameter('retrieveAll', i, true) as boolean;
+							const retrieveAll = this.getNodeParameter('retrieveAll', itemIndex, true) as boolean;
 
 							if (retrieveAll) {
 								// Use automatic pagination to get all results
@@ -38,8 +54,8 @@ export async function executeAccountOperation(
 								responseData = { variables: allVariables };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 0) as number;
-								const max = this.getNodeParameter('max', i, 100) as number;
+								const page = this.getNodeParameter('page', itemIndex, 0) as number;
+								const max = this.getNodeParameter('max', itemIndex, 100) as number;
 
 								const queryParams: Record<string, string | number> = {
 									page,
@@ -59,30 +75,43 @@ export async function executeAccountOperation(
 
 					case 'getDevices':
 						{
-							const retrieveAll = this.getNodeParameter('retrieveAll', i, true) as boolean;
-							const filterId = this.getNodeParameter('filterId', i, 0) as number;
-							const hostname = this.getNodeParameter('hostname', i, '') as string;
-							const deviceType = this.getNodeParameter('deviceType', i, '') as string;
-							const operatingSystem = this.getNodeParameter('operatingSystem', i, '') as string;
-							const siteName = this.getNodeParameter('siteName', i, '') as string;
+							const retrieveAll = this.getNodeParameter('retrieveAll', itemIndex, true) as boolean;
+							const filterId = this.getNodeParameter('filterId', itemIndex, 0) as number;
+							const hostname = this.getNodeParameter('hostname', itemIndex, '') as string;
+							const deviceType = this.getNodeParameter('deviceType', itemIndex, '') as string;
+							const operatingSystem = this.getNodeParameter(
+								'operatingSystem',
+								itemIndex,
+								'',
+							) as string;
+							const siteName = this.getNodeParameter('siteName', itemIndex, '') as string;
 
 							const queryParams: Record<string, string | number> = {};
 
-							// Add filters if provided
+							// Add filters if provided - safe string handling
 							if (filterId > 0) {
 								queryParams.filterId = filterId;
 							}
-							if (hostname.trim() !== '') {
-								queryParams.hostname = hostname.trim();
+
+							// Safe string conversion and trimming
+							const safeHostname = hostname?.toString?.()?.trim?.() || '';
+							if (safeHostname !== '') {
+								queryParams.hostname = safeHostname;
 							}
-							if (deviceType.trim() !== '') {
-								queryParams.deviceType = deviceType.trim();
+
+							const safeDeviceType = deviceType?.toString?.()?.trim?.() || '';
+							if (safeDeviceType !== '') {
+								queryParams.deviceType = safeDeviceType;
 							}
-							if (operatingSystem.trim() !== '') {
-								queryParams.operatingSystem = operatingSystem.trim();
+
+							const safeOperatingSystem = operatingSystem?.toString?.()?.trim?.() || '';
+							if (safeOperatingSystem !== '') {
+								queryParams.operatingSystem = safeOperatingSystem;
 							}
-							if (siteName.trim() !== '') {
-								queryParams.siteName = siteName.trim();
+
+							const safeSiteName = siteName?.toString?.()?.trim?.() || '';
+							if (safeSiteName !== '') {
+								queryParams.siteName = safeSiteName;
 							}
 
 							if (retrieveAll) {
@@ -97,8 +126,8 @@ export async function executeAccountOperation(
 								responseData = { devices: allDevices };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 0) as number;
-								const max = this.getNodeParameter('max', i, 100) as number;
+								const page = this.getNodeParameter('page', itemIndex, 0) as number;
+								const max = this.getNodeParameter('max', itemIndex, 100) as number;
 								queryParams.page = page;
 								queryParams.max = max;
 
@@ -115,7 +144,7 @@ export async function executeAccountOperation(
 
 					case 'getUsers':
 						{
-							const retrieveAll = this.getNodeParameter('retrieveAll', i, true) as boolean;
+							const retrieveAll = this.getNodeParameter('retrieveAll', itemIndex, true) as boolean;
 
 							if (retrieveAll) {
 								// Use automatic pagination to get all results
@@ -129,8 +158,8 @@ export async function executeAccountOperation(
 								responseData = { users: allUsers };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 0) as number;
-								const max = this.getNodeParameter('max', i, 100) as number;
+								const page = this.getNodeParameter('page', itemIndex, 0) as number;
+								const max = this.getNodeParameter('max', itemIndex, 100) as number;
 
 								const queryParams: Record<string, string | number> = {
 									page,
@@ -150,7 +179,7 @@ export async function executeAccountOperation(
 
 					case 'getComponents':
 						{
-							const retrieveAll = this.getNodeParameter('retrieveAll', i, true) as boolean;
+							const retrieveAll = this.getNodeParameter('retrieveAll', itemIndex, true) as boolean;
 
 							if (retrieveAll) {
 								// Use automatic pagination to get all results
@@ -164,8 +193,8 @@ export async function executeAccountOperation(
 								responseData = { components: allComponents };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 0) as number;
-								const max = this.getNodeParameter('max', i, 100) as number;
+								const page = this.getNodeParameter('page', itemIndex, 0) as number;
+								const max = this.getNodeParameter('max', itemIndex, 100) as number;
 
 								const queryParams: Record<string, string | number> = {
 									page,
@@ -185,8 +214,8 @@ export async function executeAccountOperation(
 
 					case 'getOpenAlerts':
 						{
-							const retrieveAll = this.getNodeParameter('retrieveAll', i, true) as boolean;
-							const muted = this.getNodeParameter('muted', i, false) as boolean;
+							const retrieveAll = this.getNodeParameter('retrieveAll', itemIndex, true) as boolean;
+							const muted = this.getNodeParameter('muted', itemIndex, false) as boolean;
 
 							const queryParams: Record<string, string | number | boolean> = {};
 
@@ -206,8 +235,8 @@ export async function executeAccountOperation(
 								responseData = { alerts: allAlerts };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 0) as number;
-								const max = this.getNodeParameter('max', i, 100) as number;
+								const page = this.getNodeParameter('page', itemIndex, 0) as number;
+								const max = this.getNodeParameter('max', itemIndex, 100) as number;
 								queryParams.page = page;
 								queryParams.max = max;
 
@@ -224,8 +253,8 @@ export async function executeAccountOperation(
 
 					case 'getResolvedAlerts':
 						{
-							const retrieveAll = this.getNodeParameter('retrieveAll', i, true) as boolean;
-							const muted = this.getNodeParameter('muted', i, false) as boolean;
+							const retrieveAll = this.getNodeParameter('retrieveAll', itemIndex, true) as boolean;
+							const muted = this.getNodeParameter('muted', itemIndex, false) as boolean;
 
 							const queryParams: Record<string, string | number | boolean> = {};
 
@@ -245,8 +274,8 @@ export async function executeAccountOperation(
 								responseData = { alerts: allAlerts };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 0) as number;
-								const max = this.getNodeParameter('max', i, 100) as number;
+								const page = this.getNodeParameter('page', itemIndex, 0) as number;
+								const max = this.getNodeParameter('max', itemIndex, 100) as number;
 								queryParams.page = page;
 								queryParams.max = max;
 
@@ -263,13 +292,15 @@ export async function executeAccountOperation(
 
 					case 'getSites':
 						{
-							const retrieveAll = this.getNodeParameter('retrieveAll', i, true) as boolean;
-							const siteName = this.getNodeParameter('siteName', i, '') as string;
+							const retrieveAll = this.getNodeParameter('retrieveAll', itemIndex, true) as boolean;
+							const siteName = this.getNodeParameter('siteName', itemIndex, '') as string;
 
 							const queryParams: Record<string, string | number> = {};
 
-							if (siteName.trim() !== '') {
-								queryParams.siteName = siteName.trim();
+							// Safe string conversion and trimming
+							const safeSiteName = siteName?.toString?.()?.trim?.() || '';
+							if (safeSiteName !== '') {
+								queryParams.siteName = safeSiteName;
 							}
 
 							if (retrieveAll) {
@@ -284,8 +315,8 @@ export async function executeAccountOperation(
 								responseData = { sites: allSites };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 0) as number;
-								const max = this.getNodeParameter('max', i, 100) as number;
+								const page = this.getNodeParameter('page', itemIndex, 0) as number;
+								const max = this.getNodeParameter('max', itemIndex, 100) as number;
 								queryParams.page = page;
 								queryParams.max = max;
 
@@ -302,7 +333,7 @@ export async function executeAccountOperation(
 
 					default:
 						throw new NodeOperationError(this.getNode(), `Unknown operation: ${operation}`, {
-							itemIndex: i,
+							itemIndex: itemIndex,
 						});
 				}
 
@@ -312,7 +343,7 @@ export async function executeAccountOperation(
 					responseData.forEach((item: any) => {
 						returnData.push({
 							json: item,
-							pairedItem: { item: i },
+							pairedItem: { item: itemIndex },
 						});
 					});
 				} else if (responseData && typeof responseData === 'object') {
@@ -344,7 +375,7 @@ export async function executeAccountOperation(
 								// Single object response
 								returnData.push({
 									json: responseData,
-									pairedItem: { item: i },
+									pairedItem: { item: itemIndex },
 								});
 								continue;
 							}
@@ -355,7 +386,7 @@ export async function executeAccountOperation(
 						dataArray.forEach((item: any) => {
 							returnData.push({
 								json: item,
-								pairedItem: { item: i },
+								pairedItem: { item: itemIndex },
 							});
 						});
 					} else {
@@ -366,7 +397,7 @@ export async function executeAccountOperation(
 								pageDetails: responseData.pageDetails || null,
 								operation: operation,
 							},
-							pairedItem: { item: i },
+							pairedItem: { item: itemIndex },
 						});
 					}
 				}
@@ -374,7 +405,7 @@ export async function executeAccountOperation(
 				if (this.continueOnFail()) {
 					returnData.push({
 						json: { error: error.message },
-						pairedItem: { item: i },
+						pairedItem: { item: itemIndex },
 					});
 					continue;
 				}
