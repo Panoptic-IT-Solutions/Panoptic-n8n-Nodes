@@ -1,5 +1,23 @@
 # n8n-nodes-datto-rmm
 
+## 0.4.11
+
+### Patch Changes
+
+- dbb1902: Add automatic pagination support for all "get all" operations
+  - Added "Retrieve All" toggle option for all paginated operations in account and site resources
+  - When enabled (default), automatically fetches all results across all pages without user configuration
+  - When disabled, allows manual pagination control with page and max results parameters
+  - Improved user experience by eliminating the need to manually handle pagination for large result sets
+  - Enhanced pagination helper with proper Datto RMM API response structure handling
+  - Affects all list operations: getDevices, getUsers, getSites, getVariables, getComponents, getOpenAlerts, getResolvedAlerts across account and site resources
+
+- 3e4795e: CRITICAL: Fix pagination indexing across all account operations
+  - Fixed pagination to use 1-based indexing (page=1) instead of 0-based (page=0) for all account operations to match API requirements
+  - Resolves issue where operations would return empty results despite totalCount > 0
+  - Ensures consistency with site operations that were already working correctly
+  - Affects getDevices, getSites, getUsers, getVariables, and all other account operations
+
 ## 0.4.10
 
 ### Patch Changes
