@@ -44,7 +44,7 @@ export async function executeAccountOperation(
 
 					case 'getDevices':
 						{
-							const page = this.getNodeParameter('page', i, 1) as number;
+							const page = this.getNodeParameter('page', i, 0) as number;
 							const max = this.getNodeParameter('max', i, 100) as number;
 							const filterId = this.getNodeParameter('filterId', i, 0) as number;
 							const hostname = this.getNodeParameter('hostname', i, '') as string;
@@ -86,7 +86,7 @@ export async function executeAccountOperation(
 
 					case 'getUsers':
 						{
-							const page = this.getNodeParameter('page', i, 1) as number;
+							const page = this.getNodeParameter('page', i, 0) as number;
 							const max = this.getNodeParameter('max', i, 100) as number;
 
 							const queryParams: Record<string, string | number> = {
@@ -106,7 +106,7 @@ export async function executeAccountOperation(
 
 					case 'getComponents':
 						{
-							const page = this.getNodeParameter('page', i, 1) as number;
+							const page = this.getNodeParameter('page', i, 0) as number;
 							const max = this.getNodeParameter('max', i, 100) as number;
 
 							const queryParams: Record<string, string | number> = {
@@ -126,7 +126,7 @@ export async function executeAccountOperation(
 
 					case 'getOpenAlerts':
 						{
-							const page = this.getNodeParameter('page', i, 1) as number;
+							const page = this.getNodeParameter('page', i, 0) as number;
 							const max = this.getNodeParameter('max', i, 100) as number;
 							const muted = this.getNodeParameter('muted', i, false) as boolean;
 
@@ -151,7 +151,7 @@ export async function executeAccountOperation(
 
 					case 'getResolvedAlerts':
 						{
-							const page = this.getNodeParameter('page', i, 1) as number;
+							const page = this.getNodeParameter('page', i, 0) as number;
 							const max = this.getNodeParameter('max', i, 100) as number;
 							const muted = this.getNodeParameter('muted', i, false) as boolean;
 
@@ -176,7 +176,7 @@ export async function executeAccountOperation(
 
 					case 'getSites':
 						{
-							const page = this.getNodeParameter('page', i, 1) as number;
+							const page = this.getNodeParameter('page', i, 0) as number;
 							const max = this.getNodeParameter('max', i, 100) as number;
 							const siteName = this.getNodeParameter('siteName', i, '') as string;
 
@@ -205,8 +205,9 @@ export async function executeAccountOperation(
 						});
 				}
 
-				// Handle array responses (for paginated results)
+				// Handle different response structures from Datto RMM API
 				if (Array.isArray(responseData)) {
+					// Direct array response
 					responseData.forEach((item: any) => {
 						returnData.push({
 							json: item,
@@ -214,18 +215,56 @@ export async function executeAccountOperation(
 						});
 					});
 				} else if (responseData && typeof responseData === 'object') {
-					// Handle paginated response objects
-					if (responseData.data && Array.isArray(responseData.data)) {
-						responseData.data.forEach((item: any) => {
+					// Handle Datto RMM API response structures
+					let dataArray: any[] = [];
+
+					switch (operation) {
+						case 'getSites':
+							dataArray = responseData.sites || [];
+							break;
+						case 'getDevices':
+							dataArray = responseData.devices || [];
+							break;
+						case 'getUsers':
+							dataArray = responseData.users || [];
+							break;
+						case 'getComponents':
+							dataArray = responseData.components || [];
+							break;
+						case 'getOpenAlerts':
+						case 'getResolvedAlerts':
+							dataArray = responseData.alerts || [];
+							break;
+						default:
+							// Handle generic responses or single objects
+							if (responseData.data && Array.isArray(responseData.data)) {
+								dataArray = responseData.data;
+							} else {
+								// Single object response
+								returnData.push({
+									json: responseData,
+									pairedItem: { item: i },
+								});
+								continue;
+							}
+					}
+
+					// Add each item from the data array
+					if (dataArray.length > 0) {
+						dataArray.forEach((item: any) => {
 							returnData.push({
 								json: item,
 								pairedItem: { item: i },
 							});
 						});
 					} else {
-						// Handle single object responses
+						// Include pagination info when no data is returned
 						returnData.push({
-							json: responseData,
+							json: {
+								message: 'No data found',
+								pageDetails: responseData.pageDetails || null,
+								operation: operation,
+							},
 							pairedItem: { item: i },
 						});
 					}
