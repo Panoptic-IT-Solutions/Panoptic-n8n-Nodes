@@ -69,7 +69,7 @@ export const accountFields: INodeProperties[] = [
 		displayName: 'Page',
 		name: 'page',
 		type: 'number',
-		default: 0,
+		default: 1,
 		displayOptions: {
 			show: {
 				resource: ['account'],
@@ -84,7 +84,7 @@ export const accountFields: INodeProperties[] = [
 				],
 			},
 		},
-		description: 'Page number (0-based)',
+		description: 'Page number (1-based)',
 	},
 	{
 		displayName: 'Max Results',

@@ -35,7 +35,7 @@ export async function executeAccountOperation(
 							responseData = await dattoRmmApiRequest.call(
 								this,
 								'GET',
-								'/account/variables',
+								'/api/v2/account/variables',
 								{},
 								queryParams,
 							);
@@ -44,7 +44,7 @@ export async function executeAccountOperation(
 
 					case 'getDevices':
 						{
-							const page = this.getNodeParameter('page', i, 0) as number;
+							const page = this.getNodeParameter('page', i, 1) as number;
 							const max = this.getNodeParameter('max', i, 100) as number;
 							const filterId = this.getNodeParameter('filterId', i, 0) as number;
 							const hostname = this.getNodeParameter('hostname', i, '') as string;
@@ -86,7 +86,7 @@ export async function executeAccountOperation(
 
 					case 'getUsers':
 						{
-							const page = this.getNodeParameter('page', i, 0) as number;
+							const page = this.getNodeParameter('page', i, 1) as number;
 							const max = this.getNodeParameter('max', i, 100) as number;
 
 							const queryParams: Record<string, string | number> = {
@@ -106,7 +106,7 @@ export async function executeAccountOperation(
 
 					case 'getComponents':
 						{
-							const page = this.getNodeParameter('page', i, 0) as number;
+							const page = this.getNodeParameter('page', i, 1) as number;
 							const max = this.getNodeParameter('max', i, 100) as number;
 
 							const queryParams: Record<string, string | number> = {
@@ -126,7 +126,7 @@ export async function executeAccountOperation(
 
 					case 'getOpenAlerts':
 						{
-							const page = this.getNodeParameter('page', i, 0) as number;
+							const page = this.getNodeParameter('page', i, 1) as number;
 							const max = this.getNodeParameter('max', i, 100) as number;
 							const muted = this.getNodeParameter('muted', i, false) as boolean;
 
@@ -151,7 +151,7 @@ export async function executeAccountOperation(
 
 					case 'getResolvedAlerts':
 						{
-							const page = this.getNodeParameter('page', i, 0) as number;
+							const page = this.getNodeParameter('page', i, 1) as number;
 							const max = this.getNodeParameter('max', i, 100) as number;
 							const muted = this.getNodeParameter('muted', i, false) as boolean;
 
@@ -176,7 +176,7 @@ export async function executeAccountOperation(
 
 					case 'getSites':
 						{
-							const page = this.getNodeParameter('page', i, 0) as number;
+							const page = this.getNodeParameter('page', i, 1) as number;
 							const max = this.getNodeParameter('max', i, 100) as number;
 							const siteName = this.getNodeParameter('siteName', i, '') as string;
 
