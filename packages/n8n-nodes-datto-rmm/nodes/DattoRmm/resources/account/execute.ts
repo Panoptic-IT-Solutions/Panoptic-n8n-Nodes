@@ -17,47 +17,227 @@ export async function executeAccountOperation(
 
 				switch (operation) {
 					case 'get':
-						responseData = await dattoRmmApiRequest.call(this, 'GET', '/api/v2/account');
+						{
+							responseData = await dattoRmmApiRequest.call(this, 'GET', '/account');
+						}
 						break;
 
 					case 'getVariables':
-						responseData = await dattoRmmApiRequest.call(this, 'GET', '/api/v2/account/variables');
+						{
+							const page = this.getNodeParameter('page', i, 1) as number;
+							const max = this.getNodeParameter('max', i, 100) as number;
+
+							const queryParams: Record<string, string | number> = {
+								page,
+								max,
+							};
+
+							responseData = await dattoRmmApiRequest.call(
+								this,
+								'GET',
+								'/account/variables',
+								{},
+								queryParams,
+							);
+						}
+						break;
+
+					case 'getDevices':
+						{
+							const page = this.getNodeParameter('page', i, 1) as number;
+							const max = this.getNodeParameter('max', i, 100) as number;
+							const filterId = this.getNodeParameter('filterId', i, 0) as number;
+							const hostname = this.getNodeParameter('hostname', i, '') as string;
+							const deviceType = this.getNodeParameter('deviceType', i, '') as string;
+							const operatingSystem = this.getNodeParameter('operatingSystem', i, '') as string;
+							const siteName = this.getNodeParameter('siteName', i, '') as string;
+
+							const queryParams: Record<string, string | number> = {
+								page,
+								max,
+							};
+
+							// Add filters if provided
+							if (filterId > 0) {
+								queryParams.filterId = filterId;
+							}
+							if (hostname.trim() !== '') {
+								queryParams.hostname = hostname.trim();
+							}
+							if (deviceType.trim() !== '') {
+								queryParams.deviceType = deviceType.trim();
+							}
+							if (operatingSystem.trim() !== '') {
+								queryParams.operatingSystem = operatingSystem.trim();
+							}
+							if (siteName.trim() !== '') {
+								queryParams.siteName = siteName.trim();
+							}
+
+							responseData = await dattoRmmApiRequest.call(
+								this,
+								'GET',
+								'/account/devices',
+								{},
+								queryParams,
+							);
+						}
+						break;
+
+					case 'getUsers':
+						{
+							const page = this.getNodeParameter('page', i, 1) as number;
+							const max = this.getNodeParameter('max', i, 100) as number;
+
+							const queryParams: Record<string, string | number> = {
+								page,
+								max,
+							};
+
+							responseData = await dattoRmmApiRequest.call(
+								this,
+								'GET',
+								'/account/users',
+								{},
+								queryParams,
+							);
+						}
+						break;
+
+					case 'getComponents':
+						{
+							const page = this.getNodeParameter('page', i, 1) as number;
+							const max = this.getNodeParameter('max', i, 100) as number;
+
+							const queryParams: Record<string, string | number> = {
+								page,
+								max,
+							};
+
+							responseData = await dattoRmmApiRequest.call(
+								this,
+								'GET',
+								'/account/components',
+								{},
+								queryParams,
+							);
+						}
+						break;
+
+					case 'getOpenAlerts':
+						{
+							const page = this.getNodeParameter('page', i, 1) as number;
+							const max = this.getNodeParameter('max', i, 100) as number;
+							const muted = this.getNodeParameter('muted', i, false) as boolean;
+
+							const queryParams: Record<string, string | number | boolean> = {
+								page,
+								max,
+							};
+
+							if (muted !== undefined) {
+								queryParams.muted = muted;
+							}
+
+							responseData = await dattoRmmApiRequest.call(
+								this,
+								'GET',
+								'/account/alerts/open',
+								{},
+								queryParams,
+							);
+						}
+						break;
+
+					case 'getResolvedAlerts':
+						{
+							const page = this.getNodeParameter('page', i, 1) as number;
+							const max = this.getNodeParameter('max', i, 100) as number;
+							const muted = this.getNodeParameter('muted', i, false) as boolean;
+
+							const queryParams: Record<string, string | number | boolean> = {
+								page,
+								max,
+							};
+
+							if (muted !== undefined) {
+								queryParams.muted = muted;
+							}
+
+							responseData = await dattoRmmApiRequest.call(
+								this,
+								'GET',
+								'/account/alerts/resolved',
+								{},
+								queryParams,
+							);
+						}
+						break;
+
+					case 'getSites':
+						{
+							const page = this.getNodeParameter('page', i, 1) as number;
+							const max = this.getNodeParameter('max', i, 100) as number;
+							const siteName = this.getNodeParameter('siteName', i, '') as string;
+
+							const queryParams: Record<string, string | number> = {
+								page,
+								max,
+							};
+
+							if (siteName.trim() !== '') {
+								queryParams.siteName = siteName.trim();
+							}
+
+							responseData = await dattoRmmApiRequest.call(
+								this,
+								'GET',
+								'/account/sites',
+								{},
+								queryParams,
+							);
+						}
 						break;
 
 					default:
-						throw new NodeOperationError(
-							this.getNode(),
-							`The operation "${operation}" is not supported for account resource`,
-							{
-								description: `Available operations: get, getVariables`,
-							},
-						);
+						throw new NodeOperationError(this.getNode(), `Unknown operation: ${operation}`, {
+							itemIndex: i,
+						});
 				}
 
-				returnData.push({
-					json: responseData,
-					pairedItem: {
-						item: i,
-					},
-				});
+				// Handle array responses (for paginated results)
+				if (Array.isArray(responseData)) {
+					responseData.forEach((item: any) => {
+						returnData.push({
+							json: item,
+							pairedItem: { item: i },
+						});
+					});
+				} else if (responseData && typeof responseData === 'object') {
+					// Handle paginated response objects
+					if (responseData.data && Array.isArray(responseData.data)) {
+						responseData.data.forEach((item: any) => {
+							returnData.push({
+								json: item,
+								pairedItem: { item: i },
+							});
+						});
+					} else {
+						// Handle single object responses
+						returnData.push({
+							json: responseData,
+							pairedItem: { item: i },
+						});
+					}
+				}
 			} catch (error) {
-				// Handle individual item errors when continueOnFail is enabled
 				if (this.continueOnFail()) {
 					returnData.push({
-						json: {
-							error: error.message || 'Unknown error occurred',
-							itemIndex: i,
-							operation: operation,
-							resource: 'account',
-						},
-						pairedItem: {
-							item: i,
-						},
+						json: { error: error.message },
+						pairedItem: { item: i },
 					});
 					continue;
 				}
-
-				// Re-throw the error to be handled by the outer handleErrors wrapper
 				throw error;
 			}
 		}

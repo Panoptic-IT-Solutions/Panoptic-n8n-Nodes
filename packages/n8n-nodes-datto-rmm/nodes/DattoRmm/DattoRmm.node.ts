@@ -11,12 +11,14 @@ import type {
 import { executeAccountOperation } from './resources/account/execute';
 import { executeDeviceOperation } from './resources/device/execute';
 import { executeSiteOperation } from './resources/site/execute';
+import { executeAlertOperation } from './resources/alert/execute';
 
 // Import resource definitions and field descriptions
 import { RESOURCE_DEFINITIONS } from './resources/definitions';
 import { accountFields } from './resources/account/description';
 import { deviceFields } from './resources/device/description';
 import { siteFields } from './resources/site/description';
+import { alertFields } from './resources/alert/description';
 import { addOperationsToResource } from './helpers/resource-operations.helper';
 import { getResourceMapperFields } from './helpers/resourceMapper';
 
@@ -65,6 +67,7 @@ export class DattoRmm implements INodeType {
 			...addOperationsToResource(accountFields, { resourceName: 'account' }),
 			...addOperationsToResource(deviceFields, { resourceName: 'device' }),
 			...addOperationsToResource(siteFields, { resourceName: 'site' }),
+			...addOperationsToResource(alertFields, { resourceName: 'alert' }),
 		],
 	};
 
@@ -82,9 +85,10 @@ export class DattoRmm implements INodeType {
 			case 'site':
 				return executeSiteOperation.call(this);
 
+			case 'alert':
+				return executeAlertOperation.call(this);
+
 			// TODO: Add other resources as they are implemented
-			// case 'alert':
-			//     return executeAlertOperation.call(this);
 			// case 'job':
 			//     return executeJobOperation.call(this);
 			// case 'audit':
