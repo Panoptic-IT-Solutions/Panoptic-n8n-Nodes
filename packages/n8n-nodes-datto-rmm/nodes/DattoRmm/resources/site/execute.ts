@@ -1,7 +1,7 @@
 import type { IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
+import { dattoRmmApiRequest, dattoRmmApiRequestAllItems } from '../../helpers/api.helper';
 import { handleErrors } from '../../helpers/errorHandler';
-import { dattoRmmApiRequest, dattoRmmApiRequestAllItems } from '../../helpers/oauth2.helper';
 
 export async function executeSiteOperation(
 	this: IExecuteFunctions,
@@ -45,7 +45,7 @@ export async function executeSiteOperation(
 								responseData = { sites: allSites };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 1) as number;
+								const page = this.getNodeParameter('page', i, 0) as number;
 								const max = this.getNodeParameter('max', i, 100) as number;
 								qs.page = page;
 								qs.max = max;
@@ -144,7 +144,7 @@ export async function executeSiteOperation(
 								responseData = { devices: allDevices };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 1) as number;
+								const page = this.getNodeParameter('page', i, 0) as number;
 								const max = this.getNodeParameter('max', i, 100) as number;
 								qs.page = page;
 								qs.max = max;
@@ -180,7 +180,7 @@ export async function executeSiteOperation(
 								responseData = { alerts: allAlerts };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 1) as number;
+								const page = this.getNodeParameter('page', i, 0) as number;
 								const max = this.getNodeParameter('max', i, 100) as number;
 								qs.page = page;
 								qs.max = max;
@@ -216,7 +216,7 @@ export async function executeSiteOperation(
 								responseData = { alerts: allAlerts };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 1) as number;
+								const page = this.getNodeParameter('page', i, 0) as number;
 								const max = this.getNodeParameter('max', i, 100) as number;
 								qs.page = page;
 								qs.max = max;
@@ -249,7 +249,7 @@ export async function executeSiteOperation(
 								responseData = { variables: allVariables };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 1) as number;
+								const page = this.getNodeParameter('page', i, 0) as number;
 								const max = this.getNodeParameter('max', i, 100) as number;
 
 								const qs = { page, max };

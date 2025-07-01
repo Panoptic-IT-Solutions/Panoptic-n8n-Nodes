@@ -1,7 +1,7 @@
 import type { IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
+import { dattoRmmApiRequest } from '../../helpers/api.helper';
 import { handleErrors } from '../../helpers/errorHandler';
-import { dattoRmmApiRequest } from '../../helpers/oauth2.helper';
 
 export async function executeAlertOperation(
 	this: IExecuteFunctions,

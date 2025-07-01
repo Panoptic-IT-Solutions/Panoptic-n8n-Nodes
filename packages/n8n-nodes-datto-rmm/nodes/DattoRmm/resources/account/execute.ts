@@ -1,7 +1,7 @@
+import { dattoRmmApiRequest, dattoRmmApiRequestAllItems } from '../../helpers/api.helper';
+import { handleErrors } from '../../helpers/errorHandler';
 import type { IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { handleErrors } from '../../helpers/errorHandler';
-import { dattoRmmApiRequest, dattoRmmApiRequestAllItems } from '../../helpers/oauth2.helper';
 
 export async function executeAccountOperation(
 	this: IExecuteFunctions,
@@ -38,7 +38,7 @@ export async function executeAccountOperation(
 								responseData = { variables: allVariables };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 1) as number;
+								const page = this.getNodeParameter('page', i, 0) as number;
 								const max = this.getNodeParameter('max', i, 100) as number;
 
 								const queryParams: Record<string, string | number> = {
@@ -97,7 +97,7 @@ export async function executeAccountOperation(
 								responseData = { devices: allDevices };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 1) as number;
+								const page = this.getNodeParameter('page', i, 0) as number;
 								const max = this.getNodeParameter('max', i, 100) as number;
 								queryParams.page = page;
 								queryParams.max = max;
@@ -129,7 +129,7 @@ export async function executeAccountOperation(
 								responseData = { users: allUsers };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 1) as number;
+								const page = this.getNodeParameter('page', i, 0) as number;
 								const max = this.getNodeParameter('max', i, 100) as number;
 
 								const queryParams: Record<string, string | number> = {
@@ -164,7 +164,7 @@ export async function executeAccountOperation(
 								responseData = { components: allComponents };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 1) as number;
+								const page = this.getNodeParameter('page', i, 0) as number;
 								const max = this.getNodeParameter('max', i, 100) as number;
 
 								const queryParams: Record<string, string | number> = {
@@ -206,7 +206,7 @@ export async function executeAccountOperation(
 								responseData = { alerts: allAlerts };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 1) as number;
+								const page = this.getNodeParameter('page', i, 0) as number;
 								const max = this.getNodeParameter('max', i, 100) as number;
 								queryParams.page = page;
 								queryParams.max = max;
@@ -245,7 +245,7 @@ export async function executeAccountOperation(
 								responseData = { alerts: allAlerts };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 1) as number;
+								const page = this.getNodeParameter('page', i, 0) as number;
 								const max = this.getNodeParameter('max', i, 100) as number;
 								queryParams.page = page;
 								queryParams.max = max;
@@ -284,7 +284,7 @@ export async function executeAccountOperation(
 								responseData = { sites: allSites };
 							} else {
 								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 1) as number;
+								const page = this.getNodeParameter('page', i, 0) as number;
 								const max = this.getNodeParameter('max', i, 100) as number;
 								queryParams.page = page;
 								queryParams.max = max;

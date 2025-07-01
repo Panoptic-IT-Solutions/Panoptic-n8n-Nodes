@@ -1,6 +1,6 @@
 ---
 description: 
-globs: 
+globs: .md
 alwaysApply: false
 ---
 # Changeset Creation - Automated Workflow
@@ -45,17 +45,21 @@ git push origin main
 - **Merging that PR triggers automatic npm publishing**
 - **Changeset files are consumed/deleted by the action after processing**
 
-## **Package Targeting**
+## **Package Targeting - Default Patch**
 
 For this monorepo structure:
-- `"@panoptic-it-solutions/n8n-nodes-datto-rmm": patch` - for Datto RMM node
-- `"@panoptic-it-solutions/n8n-nodes-autotask": patch` - for Autotask node
+- `"@panoptic-it-solutions/n8n-nodes-datto-rmm": patch` - **DEFAULT for all changes**
+- `"@panoptic-it-solutions/n8n-nodes-autotask": patch` - **DEFAULT for all changes**
 
-## **Change Types**
+**Only change to `minor` or `major` when explicitly requested by user**
 
-- **`patch`**: Bug fixes, small improvements (0.0.x)
-- **`minor`**: New features, non-breaking changes (0.x.0)  
-- **`major`**: Breaking changes (x.0.0)
+## **Change Types - DEFAULT TO PATCH**
+
+- **`patch`**: **DEFAULT** - Bug fixes, improvements, new features (0.0.x) 
+- **`minor`**: **ONLY when explicitly requested** - Major new features, significant API additions (0.x.0)  
+- **`major`**: **ONLY when explicitly requested** - Breaking changes (x.0.0)
+
+**🚨 CRITICAL RULE: Always use `patch` unless the user explicitly requests `minor` or `major`**
 
 ## **Critical Fixes Pattern**
 
