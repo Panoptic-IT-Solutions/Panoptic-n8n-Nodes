@@ -64,6 +64,30 @@ export const accountFields: INodeProperties[] = [
 		default: 'get',
 	},
 
+	// Retrieve All option for list operations
+	{
+		displayName: 'Retrieve All',
+		name: 'retrieveAll',
+		type: 'boolean',
+		default: true,
+		displayOptions: {
+			show: {
+				resource: ['account'],
+				operation: [
+					'getVariables',
+					'getDevices',
+					'getUsers',
+					'getComponents',
+					'getOpenAlerts',
+					'getResolvedAlerts',
+					'getSites',
+				],
+			},
+		},
+		description:
+			'Whether to retrieve all results automatically using pagination, or manually specify page and max results',
+	},
+
 	// Pagination parameters for list operations
 	{
 		displayName: 'Page',
@@ -82,6 +106,7 @@ export const accountFields: INodeProperties[] = [
 					'getResolvedAlerts',
 					'getSites',
 				],
+				retrieveAll: [false],
 			},
 		},
 		description: 'Page number (1-based)',
@@ -103,6 +128,7 @@ export const accountFields: INodeProperties[] = [
 					'getResolvedAlerts',
 					'getSites',
 				],
+				retrieveAll: [false],
 			},
 		},
 		description: 'Maximum number of results to return per page',

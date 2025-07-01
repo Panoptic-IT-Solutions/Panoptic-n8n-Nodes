@@ -75,12 +75,11 @@ export const siteFields: INodeProperties[] = [
 		],
 		default: 'get',
 	},
-	// Site UID parameter - required for most operations
+	// Site UID parameter
 	{
 		displayName: 'Site UID',
 		name: 'siteUid',
 		type: 'string',
-		default: '',
 		required: true,
 		displayOptions: {
 			show: {
@@ -97,7 +96,8 @@ export const siteFields: INodeProperties[] = [
 				],
 			},
 		},
-		description: 'The unique identifier (UID) of the site',
+		default: '',
+		description: 'The UID of the site',
 	},
 	// Site creation fields
 	{
@@ -166,7 +166,22 @@ export const siteFields: INodeProperties[] = [
 		},
 		description: 'Enable automatic Splashtop installation',
 	},
-	// Pagination parameters for list operations
+	// Retrieve All option for list operations
+	{
+		displayName: 'Retrieve All',
+		name: 'retrieveAll',
+		type: 'boolean',
+		default: true,
+		displayOptions: {
+			show: {
+				resource: ['site'],
+				operation: ['getMany', 'getDevices', 'getOpenAlerts', 'getResolvedAlerts', 'getVariables'],
+			},
+		},
+		description:
+			'Whether to retrieve all results automatically using pagination, or manually specify page and max results',
+	},
+	// Pagination parameters
 	{
 		displayName: 'Page',
 		name: 'page',
@@ -176,9 +191,10 @@ export const siteFields: INodeProperties[] = [
 			show: {
 				resource: ['site'],
 				operation: ['getMany', 'getDevices', 'getOpenAlerts', 'getResolvedAlerts', 'getVariables'],
+				retrieveAll: [false],
 			},
 		},
-		description: 'Page number (1-based)',
+		description: 'Page number for pagination',
 	},
 	{
 		displayName: 'Max Results',
@@ -189,6 +205,7 @@ export const siteFields: INodeProperties[] = [
 			show: {
 				resource: ['site'],
 				operation: ['getMany', 'getDevices', 'getOpenAlerts', 'getResolvedAlerts', 'getVariables'],
+				retrieveAll: [false],
 			},
 		},
 		description: 'Maximum number of results to return',

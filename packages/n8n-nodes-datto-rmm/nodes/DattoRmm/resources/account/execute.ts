@@ -1,7 +1,7 @@
 import type { IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 import { handleErrors } from '../../helpers/errorHandler';
-import { dattoRmmApiRequest } from '../../helpers/oauth2.helper';
+import { dattoRmmApiRequest, dattoRmmApiRequestAllItems } from '../../helpers/oauth2.helper';
 
 export async function executeAccountOperation(
 	this: IExecuteFunctions,
@@ -24,38 +24,49 @@ export async function executeAccountOperation(
 
 					case 'getVariables':
 						{
-							const page = this.getNodeParameter('page', i, 1) as number;
-							const max = this.getNodeParameter('max', i, 100) as number;
+							const retrieveAll = this.getNodeParameter('retrieveAll', i, true) as boolean;
 
-							const queryParams: Record<string, string | number> = {
-								page,
-								max,
-							};
+							if (retrieveAll) {
+								// Use automatic pagination to get all results
+								const allVariables = await dattoRmmApiRequestAllItems.call(
+									this,
+									'GET',
+									'/api/v2/account/variables',
+									{},
+									{},
+								);
+								responseData = { variables: allVariables };
+							} else {
+								// Use manual pagination
+								const page = this.getNodeParameter('page', i, 1) as number;
+								const max = this.getNodeParameter('max', i, 100) as number;
 
-							responseData = await dattoRmmApiRequest.call(
-								this,
-								'GET',
-								'/api/v2/account/variables',
-								{},
-								queryParams,
-							);
+								const queryParams: Record<string, string | number> = {
+									page,
+									max,
+								};
+
+								responseData = await dattoRmmApiRequest.call(
+									this,
+									'GET',
+									'/api/v2/account/variables',
+									{},
+									queryParams,
+								);
+							}
 						}
 						break;
 
 					case 'getDevices':
 						{
-							const page = this.getNodeParameter('page', i, 1) as number;
-							const max = this.getNodeParameter('max', i, 100) as number;
+							const retrieveAll = this.getNodeParameter('retrieveAll', i, true) as boolean;
 							const filterId = this.getNodeParameter('filterId', i, 0) as number;
 							const hostname = this.getNodeParameter('hostname', i, '') as string;
 							const deviceType = this.getNodeParameter('deviceType', i, '') as string;
 							const operatingSystem = this.getNodeParameter('operatingSystem', i, '') as string;
 							const siteName = this.getNodeParameter('siteName', i, '') as string;
 
-							const queryParams: Record<string, string | number> = {
-								page,
-								max,
-							};
+							const queryParams: Record<string, string | number> = {};
 
 							// Add filters if provided
 							if (filterId > 0) {
@@ -74,128 +85,218 @@ export async function executeAccountOperation(
 								queryParams.siteName = siteName.trim();
 							}
 
-							responseData = await dattoRmmApiRequest.call(
-								this,
-								'GET',
-								'/api/v2/account/devices',
-								{},
-								queryParams,
-							);
+							if (retrieveAll) {
+								// Use automatic pagination to get all results
+								const allDevices = await dattoRmmApiRequestAllItems.call(
+									this,
+									'GET',
+									'/api/v2/account/devices',
+									{},
+									queryParams,
+								);
+								responseData = { devices: allDevices };
+							} else {
+								// Use manual pagination
+								const page = this.getNodeParameter('page', i, 1) as number;
+								const max = this.getNodeParameter('max', i, 100) as number;
+								queryParams.page = page;
+								queryParams.max = max;
+
+								responseData = await dattoRmmApiRequest.call(
+									this,
+									'GET',
+									'/api/v2/account/devices',
+									{},
+									queryParams,
+								);
+							}
 						}
 						break;
 
 					case 'getUsers':
 						{
-							const page = this.getNodeParameter('page', i, 1) as number;
-							const max = this.getNodeParameter('max', i, 100) as number;
+							const retrieveAll = this.getNodeParameter('retrieveAll', i, true) as boolean;
 
-							const queryParams: Record<string, string | number> = {
-								page,
-								max,
-							};
+							if (retrieveAll) {
+								// Use automatic pagination to get all results
+								const allUsers = await dattoRmmApiRequestAllItems.call(
+									this,
+									'GET',
+									'/api/v2/account/users',
+									{},
+									{},
+								);
+								responseData = { users: allUsers };
+							} else {
+								// Use manual pagination
+								const page = this.getNodeParameter('page', i, 1) as number;
+								const max = this.getNodeParameter('max', i, 100) as number;
 
-							responseData = await dattoRmmApiRequest.call(
-								this,
-								'GET',
-								'/api/v2/account/users',
-								{},
-								queryParams,
-							);
+								const queryParams: Record<string, string | number> = {
+									page,
+									max,
+								};
+
+								responseData = await dattoRmmApiRequest.call(
+									this,
+									'GET',
+									'/api/v2/account/users',
+									{},
+									queryParams,
+								);
+							}
 						}
 						break;
 
 					case 'getComponents':
 						{
-							const page = this.getNodeParameter('page', i, 1) as number;
-							const max = this.getNodeParameter('max', i, 100) as number;
+							const retrieveAll = this.getNodeParameter('retrieveAll', i, true) as boolean;
 
-							const queryParams: Record<string, string | number> = {
-								page,
-								max,
-							};
+							if (retrieveAll) {
+								// Use automatic pagination to get all results
+								const allComponents = await dattoRmmApiRequestAllItems.call(
+									this,
+									'GET',
+									'/api/v2/account/components',
+									{},
+									{},
+								);
+								responseData = { components: allComponents };
+							} else {
+								// Use manual pagination
+								const page = this.getNodeParameter('page', i, 1) as number;
+								const max = this.getNodeParameter('max', i, 100) as number;
 
-							responseData = await dattoRmmApiRequest.call(
-								this,
-								'GET',
-								'/api/v2/account/components',
-								{},
-								queryParams,
-							);
+								const queryParams: Record<string, string | number> = {
+									page,
+									max,
+								};
+
+								responseData = await dattoRmmApiRequest.call(
+									this,
+									'GET',
+									'/api/v2/account/components',
+									{},
+									queryParams,
+								);
+							}
 						}
 						break;
 
 					case 'getOpenAlerts':
 						{
-							const page = this.getNodeParameter('page', i, 1) as number;
-							const max = this.getNodeParameter('max', i, 100) as number;
+							const retrieveAll = this.getNodeParameter('retrieveAll', i, true) as boolean;
 							const muted = this.getNodeParameter('muted', i, false) as boolean;
 
-							const queryParams: Record<string, string | number | boolean> = {
-								page,
-								max,
-							};
+							const queryParams: Record<string, string | number | boolean> = {};
 
 							if (muted !== undefined) {
 								queryParams.muted = muted;
 							}
 
-							responseData = await dattoRmmApiRequest.call(
-								this,
-								'GET',
-								'/api/v2/account/alerts/open',
-								{},
-								queryParams,
-							);
+							if (retrieveAll) {
+								// Use automatic pagination to get all results
+								const allAlerts = await dattoRmmApiRequestAllItems.call(
+									this,
+									'GET',
+									'/api/v2/account/alerts/open',
+									{},
+									queryParams,
+								);
+								responseData = { alerts: allAlerts };
+							} else {
+								// Use manual pagination
+								const page = this.getNodeParameter('page', i, 1) as number;
+								const max = this.getNodeParameter('max', i, 100) as number;
+								queryParams.page = page;
+								queryParams.max = max;
+
+								responseData = await dattoRmmApiRequest.call(
+									this,
+									'GET',
+									'/api/v2/account/alerts/open',
+									{},
+									queryParams,
+								);
+							}
 						}
 						break;
 
 					case 'getResolvedAlerts':
 						{
-							const page = this.getNodeParameter('page', i, 1) as number;
-							const max = this.getNodeParameter('max', i, 100) as number;
+							const retrieveAll = this.getNodeParameter('retrieveAll', i, true) as boolean;
 							const muted = this.getNodeParameter('muted', i, false) as boolean;
 
-							const queryParams: Record<string, string | number | boolean> = {
-								page,
-								max,
-							};
+							const queryParams: Record<string, string | number | boolean> = {};
 
 							if (muted !== undefined) {
 								queryParams.muted = muted;
 							}
 
-							responseData = await dattoRmmApiRequest.call(
-								this,
-								'GET',
-								'/api/v2/account/alerts/resolved',
-								{},
-								queryParams,
-							);
+							if (retrieveAll) {
+								// Use automatic pagination to get all results
+								const allAlerts = await dattoRmmApiRequestAllItems.call(
+									this,
+									'GET',
+									'/api/v2/account/alerts/resolved',
+									{},
+									queryParams,
+								);
+								responseData = { alerts: allAlerts };
+							} else {
+								// Use manual pagination
+								const page = this.getNodeParameter('page', i, 1) as number;
+								const max = this.getNodeParameter('max', i, 100) as number;
+								queryParams.page = page;
+								queryParams.max = max;
+
+								responseData = await dattoRmmApiRequest.call(
+									this,
+									'GET',
+									'/api/v2/account/alerts/resolved',
+									{},
+									queryParams,
+								);
+							}
 						}
 						break;
 
 					case 'getSites':
 						{
-							const page = this.getNodeParameter('page', i, 1) as number;
-							const max = this.getNodeParameter('max', i, 100) as number;
+							const retrieveAll = this.getNodeParameter('retrieveAll', i, true) as boolean;
 							const siteName = this.getNodeParameter('siteName', i, '') as string;
 
-							const queryParams: Record<string, string | number> = {
-								page,
-								max,
-							};
+							const queryParams: Record<string, string | number> = {};
 
 							if (siteName.trim() !== '') {
 								queryParams.siteName = siteName.trim();
 							}
 
-							responseData = await dattoRmmApiRequest.call(
-								this,
-								'GET',
-								'/api/v2/account/sites',
-								{},
-								queryParams,
-							);
+							if (retrieveAll) {
+								// Use automatic pagination to get all results
+								const allSites = await dattoRmmApiRequestAllItems.call(
+									this,
+									'GET',
+									'/api/v2/account/sites',
+									{},
+									queryParams,
+								);
+								responseData = { sites: allSites };
+							} else {
+								// Use manual pagination
+								const page = this.getNodeParameter('page', i, 1) as number;
+								const max = this.getNodeParameter('max', i, 100) as number;
+								queryParams.page = page;
+								queryParams.max = max;
+
+								responseData = await dattoRmmApiRequest.call(
+									this,
+									'GET',
+									'/api/v2/account/sites',
+									{},
+									queryParams,
+								);
+							}
 						}
 						break;
 

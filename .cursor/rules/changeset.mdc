@@ -1,0 +1,81 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Changeset Creation - Automated Workflow
+
+## **Core Principle: Create Files Directly, Not via CLI**
+
+- **❌ NEVER use interactive CLI**: `pnpm changeset` is designed for humans, not automation
+- **✅ ALWAYS create files directly**: Write changeset files programmatically in `.changeset/` directory
+- **🚨 CRITICAL**: Never run `pnpm changeset version` locally - this breaks GitHub Actions workflow
+
+## **Correct Automated Workflow**
+
+### **1. Create Changeset File Directly**
+```markdown
+---
+"@panoptic-it-solutions/n8n-nodes-datto-rmm": patch
+---
+
+Brief description of the change
+
+- Detailed bullet point 1
+- Detailed bullet point 2
+- Impact and affected areas
+```
+
+### **2. File Naming Convention**
+- Use descriptive names: `critical-pagination-fix-v0411.md`
+- Include version hint in filename for clarity
+- Use kebab-case for consistency
+
+### **3. Commit and Push Process**
+```bash
+git add .changeset/your-changeset-file.md
+git commit -m "chore: add changeset for [description] (v0.x.x)"
+git push origin main
+```
+
+## **GitHub Actions Integration**
+
+- **GitHub Action detects changeset files automatically**
+- **Creates "Version Packages" PR with proper version bumps**
+- **Merging that PR triggers automatic npm publishing**
+- **Changeset files are consumed/deleted by the action after processing**
+
+## **Package Targeting**
+
+For this monorepo structure:
+- `"@panoptic-it-solutions/n8n-nodes-datto-rmm": patch` - for Datto RMM node
+- `"@panoptic-it-solutions/n8n-nodes-autotask": patch` - for Autotask node
+
+## **Change Types**
+
+- **`patch`**: Bug fixes, small improvements (0.0.x)
+- **`minor`**: New features, non-breaking changes (0.x.0)  
+- **`major`**: Breaking changes (x.0.0)
+
+## **Critical Fixes Pattern**
+
+For urgent/critical fixes:
+- Use "CRITICAL:" prefix in description
+- Include impact assessment
+- List all affected operations/areas
+- Example: "CRITICAL: Fix pagination indexing across all account operations"
+
+## **Why This Approach Works**
+
+- **Consistent**: No interactive prompts or editor issues
+- **Automated**: Can be scripted and integrated into CI/CD
+- **Reliable**: Avoids vim/editor conflicts and user interaction requirements
+- **GitHub Actions Compatible**: Files remain intact for action processing
+
+## **Anti-Patterns to Avoid**
+
+- ❌ Using `pnpm changeset` in automation scripts
+- ❌ Running `pnpm changeset version` locally
+- ❌ Manual version bumps in [package.json](mdc:packages/n8n-nodes-datto-rmm/package.json)
+- ❌ Publishing directly without changesets
+- ❌ Interactive commands in automated workflows

@@ -1,7 +1,7 @@
 import type { IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 import { handleErrors } from '../../helpers/errorHandler';
-import { dattoRmmApiRequest } from '../../helpers/oauth2.helper';
+import { dattoRmmApiRequest, dattoRmmApiRequestAllItems } from '../../helpers/oauth2.helper';
 
 export async function executeDeviceOperation(
 	this: IExecuteFunctions,
@@ -52,36 +52,72 @@ export async function executeDeviceOperation(
 					case 'getOpenAlerts':
 						{
 							const deviceUid = this.getNodeParameter('deviceUid', i) as string;
-							const page = this.getNodeParameter('page', i, 1) as number;
-							const max = this.getNodeParameter('max', i, 100) as number;
+							const retrieveAll = this.getNodeParameter('retrieveAll', i, true) as boolean;
 							const muted = this.getNodeParameter('muted', i, false) as boolean;
 
-							const qs = { page, max, muted };
-							responseData = await dattoRmmApiRequest.call(
-								this,
-								'GET',
-								`/api/v2/device/${deviceUid}/alerts/open`,
-								{},
-								qs,
-							);
+							const qs: Record<string, any> = { muted };
+
+							if (retrieveAll) {
+								// Use automatic pagination to get all results
+								const allAlerts = await dattoRmmApiRequestAllItems.call(
+									this,
+									'GET',
+									`/api/v2/device/${deviceUid}/alerts/open`,
+									{},
+									qs,
+								);
+								responseData = { alerts: allAlerts };
+							} else {
+								// Use manual pagination
+								const page = this.getNodeParameter('page', i, 1) as number;
+								const max = this.getNodeParameter('max', i, 100) as number;
+								qs.page = page;
+								qs.max = max;
+
+								responseData = await dattoRmmApiRequest.call(
+									this,
+									'GET',
+									`/api/v2/device/${deviceUid}/alerts/open`,
+									{},
+									qs,
+								);
+							}
 						}
 						break;
 
 					case 'getResolvedAlerts':
 						{
 							const deviceUid = this.getNodeParameter('deviceUid', i) as string;
-							const page = this.getNodeParameter('page', i, 1) as number;
-							const max = this.getNodeParameter('max', i, 100) as number;
+							const retrieveAll = this.getNodeParameter('retrieveAll', i, true) as boolean;
 							const muted = this.getNodeParameter('muted', i, false) as boolean;
 
-							const qs = { page, max, muted };
-							responseData = await dattoRmmApiRequest.call(
-								this,
-								'GET',
-								`/api/v2/device/${deviceUid}/alerts/resolved`,
-								{},
-								qs,
-							);
+							const qs: Record<string, any> = { muted };
+
+							if (retrieveAll) {
+								// Use automatic pagination to get all results
+								const allAlerts = await dattoRmmApiRequestAllItems.call(
+									this,
+									'GET',
+									`/api/v2/device/${deviceUid}/alerts/resolved`,
+									{},
+									qs,
+								);
+								responseData = { alerts: allAlerts };
+							} else {
+								// Use manual pagination
+								const page = this.getNodeParameter('page', i, 1) as number;
+								const max = this.getNodeParameter('max', i, 100) as number;
+								qs.page = page;
+								qs.max = max;
+
+								responseData = await dattoRmmApiRequest.call(
+									this,
+									'GET',
+									`/api/v2/device/${deviceUid}/alerts/resolved`,
+									{},
+									qs,
+								);
+							}
 						}
 						break;
 

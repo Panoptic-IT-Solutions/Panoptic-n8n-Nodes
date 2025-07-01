@@ -165,22 +165,59 @@ export async function dattoRmmApiRequestAllItems(
 		const queryParams = {
 			...qs,
 			page,
-			pageSize,
+			max: pageSize,
 		};
 
 		const responseData = await dattoRmmApiRequest.call(this, method, endpoint, body, queryParams);
 
+		// Handle Datto RMM specific response structures
+		let dataArray: any[] = [];
+		let pageDetails: any = null;
+
 		if (Array.isArray(responseData)) {
-			returnData.push(...responseData);
-			// If we get less than pageSize, we're done
-			hasMoreData = responseData.length >= pageSize;
-		} else if (responseData && Array.isArray(responseData.results)) {
-			returnData.push(...responseData.results);
-			// Check if there are more pages
-			hasMoreData = responseData.hasMore && responseData.results.length >= pageSize;
+			// Direct array response (rare in Datto RMM)
+			dataArray = responseData;
+		} else if (responseData && typeof responseData === 'object') {
+			// Extract data based on common Datto RMM response patterns
+			if (responseData.sites) {
+				dataArray = responseData.sites;
+			} else if (responseData.devices) {
+				dataArray = responseData.devices;
+			} else if (responseData.users) {
+				dataArray = responseData.users;
+			} else if (responseData.components) {
+				dataArray = responseData.components;
+			} else if (responseData.alerts) {
+				dataArray = responseData.alerts;
+			} else if (responseData.variables) {
+				dataArray = responseData.variables;
+			} else if (responseData.data && Array.isArray(responseData.data)) {
+				dataArray = responseData.data;
+			} else {
+				// Single item response - wrap in array
+				dataArray = [responseData];
+			}
+
+			pageDetails = responseData.pageDetails;
+		}
+
+		// Add items from this page
+		if (dataArray.length > 0) {
+			returnData.push(...dataArray);
+		}
+
+		// Determine if there are more pages
+		if (pageDetails && typeof pageDetails.totalCount === 'number') {
+			// Use totalCount to determine if we have more data
+			const currentTotal = page * pageSize;
+			hasMoreData = currentTotal < pageDetails.totalCount;
 		} else {
-			// Single item or unknown structure
-			returnData.push(responseData);
+			// Fallback: if we get less than pageSize items, assume we're done
+			hasMoreData = dataArray.length >= pageSize;
+		}
+
+		// Early exit if no data returned (avoid infinite loops on empty responses)
+		if (dataArray.length === 0) {
 			hasMoreData = false;
 		}
 
@@ -188,9 +225,23 @@ export async function dattoRmmApiRequestAllItems(
 
 		// Safety check to prevent infinite loops
 		if (page > 1000) {
+			console.warn(`Pagination safety limit reached (1000 pages) for endpoint: ${endpoint}`);
 			break;
 		}
 	}
 
 	return returnData;
+}
+
+/**
+ * Helper to get all items for a specific operation type
+ */
+export async function dattoRmmApiRequestAllItemsByOperation(
+	this: IExecuteFunctions | ILoadOptionsFunctions,
+	operation: string,
+	endpoint: string,
+	qs?: any,
+): Promise<any[]> {
+	const allItems = await dattoRmmApiRequestAllItems.call(this, 'GET', endpoint, {}, qs);
+	return allItems;
 }

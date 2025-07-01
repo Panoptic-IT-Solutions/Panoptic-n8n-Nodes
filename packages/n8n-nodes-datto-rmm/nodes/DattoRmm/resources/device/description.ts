@@ -226,6 +226,21 @@ export const deviceFields: INodeProperties[] = [
 			},
 		],
 	},
+	// Retrieve All option for alert operations
+	{
+		displayName: 'Retrieve All',
+		name: 'retrieveAll',
+		type: 'boolean',
+		default: true,
+		displayOptions: {
+			show: {
+				resource: ['device'],
+				operation: ['getOpenAlerts', 'getResolvedAlerts'],
+			},
+		},
+		description:
+			'Whether to retrieve all results automatically using pagination, or manually specify page and max results',
+	},
 	// Pagination parameters for alerts
 	{
 		displayName: 'Page',
@@ -236,6 +251,7 @@ export const deviceFields: INodeProperties[] = [
 			show: {
 				resource: ['device'],
 				operation: ['getOpenAlerts', 'getResolvedAlerts'],
+				retrieveAll: [false],
 			},
 		},
 		description: 'Page number for pagination',
@@ -249,6 +265,7 @@ export const deviceFields: INodeProperties[] = [
 			show: {
 				resource: ['device'],
 				operation: ['getOpenAlerts', 'getResolvedAlerts'],
+				retrieveAll: [false],
 			},
 		},
 		description: 'Maximum number of results per page',
