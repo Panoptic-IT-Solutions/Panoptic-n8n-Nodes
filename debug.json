@@ -1,0 +1,332 @@
+[
+	{
+		"@odata.etag": "W/\"CQAAABYAAAB/M1m4xEjGR5p/W9u92WuzAAC9Pvnf\"",
+		"createdDateTime": "2025-07-03T05:18:34Z",
+		"lastModifiedDateTime": "2025-07-03T05:18:35Z",
+		"changeKey": "CQAAABYAAAB/M1m4xEjGR5p/W9u92WuzAAC9Pvnf",
+		"categories": [],
+		"receivedDateTime": "2025-07-03T05:18:35Z",
+		"sentDateTime": "2025-07-03T05:18:30Z",
+		"hasAttachments": false,
+		"internetMessageId": "<237907d75b9503b0cb7fd657fa13f57f@purroritymail.datto.net>",
+		"subject": "Endpoint Backup Agent (AT01-03-012) Backup Not Taken for Client (Astech Air Conditioning)",
+		"bodyPreview": "Agent Alert | Endpoint Backup for PCs\r\n\r\nBackup Not Taken\r\n\r\nAT01-03-012 has stopped taking backup. The last time a backup was taken from this agent was on December 20, 2024 14:56 UTC, which exceeds your configured threshold of 1 days. If you would like a",
+		"importance": "normal",
+		"parentFolderId": "AQMkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhAC4AAAMqbVChjF5_SYicP-RtjQScAQB-M1m4xEjGR5p-W9u92WuzAAACAQwAAAA=",
+		"conversationId": "AQQkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhABAAr41RdrFKAEi86zGC6C1zMw==",
+		"conversationIndex": "AQHb69nsr41RdrFKAEi86zGC6C1zMw==",
+		"isDeliveryReceiptRequested": null,
+		"isReadReceiptRequested": false,
+		"isRead": false,
+		"isDraft": false,
+		"webLink": "https://outlook.office365.com/owa/?ItemID=AQMkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhAEYAAAMqbVChjF5%2BSYicP%2FRtjQScBwB%2FM1m4xEjGR5p%2FW9u92WuzAAACAQwAAAB%2FM1m4xEjGR5p%2FW9u92WuzAAAAvZKlzwAAAA%3D%3D&exvsurl=1&viewmodel=ReadMessageItem",
+		"inferenceClassification": "focused",
+		"body": {
+			"contentType": "html",
+			"content": "<html lang=\"en\"><head>\r\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"><meta content=\"ie=edge\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta name=\"x-apple-disable-message-reformatting\"><style type=\"text/css\">\r\n<!--\r\n@media only screen {\r\n.col, td, th, div, p\r\n\t{font-family:-apple-system,system-ui,BlinkMacSystemFont,\"Segoe UI\",\"Roboto\",\"Helvetica Neue\",Arial,sans-serif}\r\n.serif\r\n\t{font-family:'Merriweather',Georgia,serif}\r\n.sans-serif\r\n\t{font-family:'Open Sans',Arial,sans-serif}\r\n\r\n\t}\r\n#outlook a\r\n\t{padding:0}\r\nimg\r\n\t{border:0;\r\n\tline-height:100%;\r\n\tvertical-align:middle}\r\n.col\r\n\t{font-size:16px;\r\n\tline-height:25px;\r\n\tvertical-align:top}\r\n@media only screen and (max-width: 632px) {\r\n.wrapper img\r\n\t{max-width:100%}\r\nu ~ div .wrapper\r\n\t{min-width:100vw}\r\n.container\r\n\t{width:100%!important}\r\n\r\n\t}\r\n@media only screen and (max-width: 480px) {\r\n.col\r\n\t{box-sizing:border-box;\r\n\tdisplay:inline-block!important;\r\n\tline-height:23px;\r\n\twidth:100%!important}\r\n\r\n\t}\r\n-->\r\n</style></head><body style=\"box-sizing:border-box; margin:0; padding:0; width:100%; word-break:break-word\"><div lang=\"en\" style=\"display:none; font-size:0; line-height:0\"></div><table lang=\"en\" class=\"wrapper\" bgcolor=\"#FFFFFF\" cellpadding=\"16\" cellspacing=\"0\" role=\"presentation\" width=\"100%\"><tbody><tr><td align=\"center\"><table class=\"container\" bgcolor=\"#FFFFFF\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td align=\"left\"><div style=\"color:#355460; font-family:'Roboto',sans-serif\"><table align=\"center\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td bgcolor=\"#F3523E\"><table align=\"center\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td bgcolor=\"#F3523E\" style=\"padding-top:15px; padding-right:16px; padding-bottom:19px; padding-left:16px\"><span style=\"font-size:18px; line-height:26px; color:#FFFFFF; font-family:'Roboto',sans-serif\">Agent Alert</span> <span style=\"font-size:18px; line-height:26px; color:#FFFFFF; font-family:'Roboto',sans-serif; margin-left:12px; margin-right:12px\">|</span> <span style=\"font-size:18px; line-height:26px; color:#FFFFFF; text-transform:none; font-family:'Roboto',sans-serif\">Endpoint Backup for PCs</span> </td></tr></tbody></table></td></tr></tbody></table><table align=\"center\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td class=\"col\" style=\"padding-left:16px; padding-right:16px; padding-top:16px\"><p style=\"font-size:36px; margin-top:24px; margin-bottom:24px\"><b style=\"line-height:normal\">Backup Not Taken</b> </p><p>AT01-03-012 has stopped taking backup. The last time a backup was taken from this agent was on <b>December 20, 2024 14:56 UTC</b>, which exceeds your configured threshold of <b>1 days</b>. If you would like assistance, please contact <a href=\"https://helpdesk.kaseya.com\">Support Help Center</a> . </p><p><table cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\"><tbody><tr><th bgcolor=\"#199ED9\" style=\"border-radius:3px\"><a href=\"https://helpdesk.kaseya.com/hc/en-gb/search?query=endpoint%20backup%20for%20pcs%20backup%20not%20taken\" style=\"color:#FFFFFF; display:inline-block; font-size:14px; line-height:100%; padding:12px 42px; text-decoration:none\">ENDPOINT BACKUP FOR PCs KB </a></th></tr></tbody></table></p><p>Agent Name: AT01-03-012<br>Agent Shortcode: R8PK7XP7Q<br>Organization Name: Astech Air Conditioning </p><table cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"100%\" style=\"margin-top:32px; margin-bottom:32px\"><tbody><tr><td class=\"spacer py-sm-16\" bgcolor=\"#FFFFFF\" height=\"16\"></td></tr></tbody></table><p>You are receiving this email because you are subscribed to receive them. To see and edit alerts and their subscribed users, go to the <a href=\"https://portal.dattobackup.com/cloud-continuity/client/265874\">Astech Air Conditioning Endpoint Backup for PCs Settings</a> page. </p><p>If you have any questions, please submit them through <a href=\"https://helpdesk.kaseya.com\">Support Help Center</a> </p><p>Please do not reply to this email. </p><br></td></tr><tr><td><div style=\"background-color:#001D30; padding:15px 0 15px 15px\"><img src=\"https://assets.dattobackup.com/logo/DattoAKaseyaCompanyWhite.svg\" alt=\"DattoAKaseyaCompanyLogo\" width=\"54\" height=\"25\"> <p style=\"font-size:10px; line-height:normal; color:#FFFFFF; background-color:#001D30; font-family:'Roboto',sans-serif\">© Copyright Datto, Inc. | 101 Merritt 7 | Norwalk, CT | 06851 | USA | 888.294.6312<br>Datto Canada Enterprises, Inc. | 300 Town Centre Blvd | Markham, ON | L3R 5Z6 | Canada | 877.811.0577<br>Datto AsiaPac Pty Ltd | Level 7, 15 Castlereagh St | Sydney 2000 | NSW, Australia | +61 (02) 9696 8190<br>Datto Europe | 250 Longwater Avenue | READING | RG2 6GB | +44 (0) 118 402 9606<br>Datto Singapore PTE LTD | #09-38, Paya Lebar Square | Singapore 409051 </p></div></td></tr></tbody></table></div></td></tr></tbody></table></td></tr></tbody></table></body></html>"
+		},
+		"sender": {
+			"emailAddress": {
+				"name": "Datto",
+				"address": "noreply@datto.com"
+			}
+		},
+		"from": {
+			"emailAddress": {
+				"name": "Datto",
+				"address": "noreply@datto.com"
+			}
+		},
+		"toRecipients": [
+			{
+				"emailAddress": {
+					"name": "Tanel Tamm",
+					"address": "tanel@panoptic.ie"
+				}
+			},
+			{
+				"emailAddress": {
+					"name": "dattocc.panoptic.ie@email.eu.autotask.net",
+					"address": "dattocc.panoptic.ie@email.eu.autotask.net"
+				}
+			},
+			{
+				"emailAddress": {
+					"name": "Automations",
+					"address": "Automations@panoptic.ie"
+				}
+			}
+		],
+		"ccRecipients": [],
+		"bccRecipients": [],
+		"replyTo": [],
+		"flag": {
+			"flagStatus": "notFlagged"
+		},
+		"id": "AQMkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhAEYAAAMqbVChjF5_SYicP-RtjQScBwB-M1m4xEjGR5p-W9u92WuzAAACAQwAAAB-M1m4xEjGR5p-W9u92WuzAAAAvZKlzwAAAA=="
+	},
+	{
+		"@odata.etag": "W/\"CQAAABYAAAB/M1m4xEjGR5p/W9u92WuzAAC9Pvnj\"",
+		"createdDateTime": "2025-07-03T05:18:34Z",
+		"lastModifiedDateTime": "2025-07-03T05:18:35Z",
+		"changeKey": "CQAAABYAAAB/M1m4xEjGR5p/W9u92WuzAAC9Pvnj",
+		"categories": [],
+		"receivedDateTime": "2025-07-03T05:18:35Z",
+		"sentDateTime": "2025-07-03T05:18:29Z",
+		"hasAttachments": false,
+		"internetMessageId": "<c2885f8144a827dd0a16ca34dbaf8338@purroritymail.datto.net>",
+		"subject": "Endpoint Backup Agent (AT01-03-012) Checkin Alert for Organization (Astech Air Conditioning)",
+		"bodyPreview": "Agent Alert | Endpoint Backup for PCs\r\n\r\nAgent Not Checking In\r\n\r\nAT01-03-012 has stopped communicating with the Datto Cloud. The last time we've heard from this agent was on December 20, 2024 15:23, which exceeds your configured threshold of 7 days.\r\n\r\nE",
+		"importance": "normal",
+		"parentFolderId": "AQMkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhAC4AAAMqbVChjF5_SYicP-RtjQScAQB-M1m4xEjGR5p-W9u92WuzAAACAQwAAAA=",
+		"conversationId": "AQQkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhABAAzj8VvrTUmUmGWZE2G28TCQ==",
+		"conversationIndex": "AQHb69nszj8VvrTUmUmGWZE2G28TCQ==",
+		"isDeliveryReceiptRequested": null,
+		"isReadReceiptRequested": false,
+		"isRead": false,
+		"isDraft": false,
+		"webLink": "https://outlook.office365.com/owa/?ItemID=AQMkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhAEYAAAMqbVChjF5%2BSYicP%2FRtjQScBwB%2FM1m4xEjGR5p%2FW9u92WuzAAACAQwAAAB%2FM1m4xEjGR5p%2FW9u92WuzAAAAvZKl0AAAAA%3D%3D&exvsurl=1&viewmodel=ReadMessageItem",
+		"inferenceClassification": "focused",
+		"body": {
+			"contentType": "html",
+			"content": "<html lang=\"en\"><head>\r\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"><meta content=\"ie=edge\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta name=\"x-apple-disable-message-reformatting\"><style type=\"text/css\">\r\n<!--\r\n@media only screen {\r\n.col, td, th, div, p\r\n\t{font-family:-apple-system,system-ui,BlinkMacSystemFont,\"Segoe UI\",\"Roboto\",\"Helvetica Neue\",Arial,sans-serif}\r\n.serif\r\n\t{font-family:'Merriweather',Georgia,serif}\r\n.sans-serif\r\n\t{font-family:'Open Sans',Arial,sans-serif}\r\n\r\n\t}\r\n#outlook a\r\n\t{padding:0}\r\nimg\r\n\t{border:0;\r\n\tline-height:100%;\r\n\tvertical-align:middle}\r\n.col\r\n\t{font-size:16px;\r\n\tline-height:25px;\r\n\tvertical-align:top}\r\n@media only screen and (max-width: 632px) {\r\n.wrapper img\r\n\t{max-width:100%}\r\nu ~ div .wrapper\r\n\t{min-width:100vw}\r\n.container\r\n\t{width:100%!important}\r\n\r\n\t}\r\n@media only screen and (max-width: 480px) {\r\n.col\r\n\t{box-sizing:border-box;\r\n\tdisplay:inline-block!important;\r\n\tline-height:23px;\r\n\twidth:100%!important}\r\n\r\n\t}\r\n-->\r\n</style></head><body style=\"box-sizing:border-box; margin:0; padding:0; width:100%; word-break:break-word\"><div lang=\"en\" style=\"display:none; font-size:0; line-height:0\"></div><table lang=\"en\" class=\"wrapper\" bgcolor=\"#FFFFFF\" cellpadding=\"16\" cellspacing=\"0\" role=\"presentation\" width=\"100%\"><tbody><tr><td align=\"center\"><table class=\"container\" bgcolor=\"#FFFFFF\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td align=\"left\"><div style=\"color:#355460; font-family:'Roboto',sans-serif\"><table align=\"center\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td bgcolor=\"#F3523E\"><table align=\"center\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td bgcolor=\"#F3523E\" style=\"padding-top:15px; padding-right:16px; padding-bottom:19px; padding-left:16px\"><span style=\"font-size:18px; line-height:26px; color:#FFFFFF; font-family:'Roboto',sans-serif\">Agent Alert</span> <span style=\"font-size:18px; line-height:26px; color:#FFFFFF; font-family:'Roboto',sans-serif; margin-left:12px; margin-right:12px\">|</span> <span style=\"font-size:18px; line-height:26px; color:#FFFFFF; text-transform:none; font-family:'Roboto',sans-serif\">Endpoint Backup for PCs</span> </td></tr></tbody></table></td></tr></tbody></table><table align=\"center\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td class=\"col\" style=\"padding-left:16px; padding-right:16px; padding-top:16px\"><p style=\"font-size:36px; margin-top:24px; margin-bottom:24px\"><b style=\"line-height:normal\">Agent Not Checking In</b> </p><p>AT01-03-012 has stopped communicating with the Datto Cloud. The last time we've heard from this agent was on <b>December 20, 2024 15:23</b>, which exceeds your configured threshold of <b>7 days</b>. </p><p><table cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\"><tbody><tr><th bgcolor=\"#199ED9\" style=\"border-radius:3px\"><a href=\"https://helpdesk.kaseya.com/hc/en-gb/search?query=endpoint%20backup%20for%20pcs%20checkin%20failure\" style=\"color:#FFFFFF; display:inline-block; font-size:14px; line-height:100%; padding:12px 42px; text-decoration:none\">ENDPOINT BACKUP FOR PCs KB </a></th></tr></tbody></table></p><p>Agent Name: AT01-03-012<br>Agent Shortcode: R8PK7XP7Q<br>Organization Name: Astech Air Conditioning </p><table cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"100%\" style=\"margin-top:32px; margin-bottom:32px\"><tbody><tr><td class=\"spacer py-sm-16\" bgcolor=\"#FFFFFF\" height=\"16\"></td></tr></tbody></table><p>You are receiving this email because you are subscribed to receive them. To see and edit alerts and their subscribed users, go to the <a href=\"https://portal.dattobackup.com/cloud-continuity/client/265874\">Astech Air Conditioning Endpoint Backup for PCs Settings</a> page. </p><p>If you have any questions, please submit them through <a href=\"https://helpdesk.kaseya.com\">Support Help Center</a> </p><p>Please do not reply to this email. </p><br></td></tr><tr><td><div style=\"background-color:#001D30; padding:15px 0 15px 15px\"><img src=\"https://assets.dattobackup.com/logo/DattoAKaseyaCompanyWhite.svg\" alt=\"DattoAKaseyaCompanyLogo\" width=\"54\" height=\"25\"> <p style=\"font-size:10px; line-height:normal; color:#FFFFFF; background-color:#001D30; font-family:'Roboto',sans-serif\">© Copyright Datto, Inc. | 101 Merritt 7 | Norwalk, CT | 06851 | USA | 888.294.6312<br>Datto Canada Enterprises, Inc. | 300 Town Centre Blvd | Markham, ON | L3R 5Z6 | Canada | 877.811.0577<br>Datto AsiaPac Pty Ltd | Level 7, 15 Castlereagh St | Sydney 2000 | NSW, Australia | +61 (02) 9696 8190<br>Datto Europe | 250 Longwater Avenue | READING | RG2 6GB | +44 (0) 118 402 9606<br>Datto Singapore PTE LTD | #09-38, Paya Lebar Square | Singapore 409051 </p></div></td></tr></tbody></table></div></td></tr></tbody></table></td></tr></tbody></table></body></html>"
+		},
+		"sender": {
+			"emailAddress": {
+				"name": "Datto",
+				"address": "noreply@datto.com"
+			}
+		},
+		"from": {
+			"emailAddress": {
+				"name": "Datto",
+				"address": "noreply@datto.com"
+			}
+		},
+		"toRecipients": [
+			{
+				"emailAddress": {
+					"name": "Tanel Tamm",
+					"address": "tanel@panoptic.ie"
+				}
+			},
+			{
+				"emailAddress": {
+					"name": "dattocc.panoptic.ie@email.eu.autotask.net",
+					"address": "dattocc.panoptic.ie@email.eu.autotask.net"
+				}
+			},
+			{
+				"emailAddress": {
+					"name": "Automations",
+					"address": "Automations@panoptic.ie"
+				}
+			}
+		],
+		"ccRecipients": [],
+		"bccRecipients": [],
+		"replyTo": [],
+		"flag": {
+			"flagStatus": "notFlagged"
+		},
+		"id": "AQMkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhAEYAAAMqbVChjF5_SYicP-RtjQScBwB-M1m4xEjGR5p-W9u92WuzAAACAQwAAAB-M1m4xEjGR5p-W9u92WuzAAAAvZKl0AAAAA=="
+	},
+	{
+		"@odata.etag": "W/\"CQAAABYAAAB/M1m4xEjGR5p/W9u92WuzAAC9Pvnp\"",
+		"createdDateTime": "2025-07-03T05:18:35Z",
+		"lastModifiedDateTime": "2025-07-03T05:18:37Z",
+		"changeKey": "CQAAABYAAAB/M1m4xEjGR5p/W9u92WuzAAC9Pvnp",
+		"categories": [],
+		"receivedDateTime": "2025-07-03T05:18:36Z",
+		"sentDateTime": "2025-07-03T05:18:29Z",
+		"hasAttachments": false,
+		"internetMessageId": "<d47bdccd5f4a3243d6e5195387c5be1b@purroritymail.datto.net>",
+		"subject": "Endpoint Backup Agent (AT01-04-005) Checkin Alert for Organization (Astech Air Conditioning)",
+		"bodyPreview": "Agent Alert | Endpoint Backup for PCs\r\n\r\nAgent Not Checking In\r\n\r\nAT01-04-005 has stopped communicating with the Datto Cloud. The last time we've heard from this agent was on June 13, 2025 11:15, which exceeds your configured threshold of 7 days.\r\n\r\nENDPO",
+		"importance": "normal",
+		"parentFolderId": "AQMkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhAC4AAAMqbVChjF5_SYicP-RtjQScAQB-M1m4xEjGR5p-W9u92WuzAAACAQwAAAA=",
+		"conversationId": "AQQkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhABAA7x21dL3dpEG8UzdSlexD-g==",
+		"conversationIndex": "AQHb69nt7x21dL3dpEG8UzdSlexD/g==",
+		"isDeliveryReceiptRequested": null,
+		"isReadReceiptRequested": false,
+		"isRead": false,
+		"isDraft": false,
+		"webLink": "https://outlook.office365.com/owa/?ItemID=AQMkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhAEYAAAMqbVChjF5%2BSYicP%2FRtjQScBwB%2FM1m4xEjGR5p%2FW9u92WuzAAACAQwAAAB%2FM1m4xEjGR5p%2FW9u92WuzAAAAvZKl0QAAAA%3D%3D&exvsurl=1&viewmodel=ReadMessageItem",
+		"inferenceClassification": "focused",
+		"body": {
+			"contentType": "html",
+			"content": "<html lang=\"en\"><head>\r\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"><meta content=\"ie=edge\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta name=\"x-apple-disable-message-reformatting\"><style type=\"text/css\">\r\n<!--\r\n@media only screen {\r\n.col, td, th, div, p\r\n\t{font-family:-apple-system,system-ui,BlinkMacSystemFont,\"Segoe UI\",\"Roboto\",\"Helvetica Neue\",Arial,sans-serif}\r\n.serif\r\n\t{font-family:'Merriweather',Georgia,serif}\r\n.sans-serif\r\n\t{font-family:'Open Sans',Arial,sans-serif}\r\n\r\n\t}\r\n#outlook a\r\n\t{padding:0}\r\nimg\r\n\t{border:0;\r\n\tline-height:100%;\r\n\tvertical-align:middle}\r\n.col\r\n\t{font-size:16px;\r\n\tline-height:25px;\r\n\tvertical-align:top}\r\n@media only screen and (max-width: 632px) {\r\n.wrapper img\r\n\t{max-width:100%}\r\nu ~ div .wrapper\r\n\t{min-width:100vw}\r\n.container\r\n\t{width:100%!important}\r\n\r\n\t}\r\n@media only screen and (max-width: 480px) {\r\n.col\r\n\t{box-sizing:border-box;\r\n\tdisplay:inline-block!important;\r\n\tline-height:23px;\r\n\twidth:100%!important}\r\n\r\n\t}\r\n-->\r\n</style></head><body style=\"box-sizing:border-box; margin:0; padding:0; width:100%; word-break:break-word\"><div lang=\"en\" style=\"display:none; font-size:0; line-height:0\"></div><table lang=\"en\" class=\"wrapper\" bgcolor=\"#FFFFFF\" cellpadding=\"16\" cellspacing=\"0\" role=\"presentation\" width=\"100%\"><tbody><tr><td align=\"center\"><table class=\"container\" bgcolor=\"#FFFFFF\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td align=\"left\"><div style=\"color:#355460; font-family:'Roboto',sans-serif\"><table align=\"center\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td bgcolor=\"#F3523E\"><table align=\"center\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td bgcolor=\"#F3523E\" style=\"padding-top:15px; padding-right:16px; padding-bottom:19px; padding-left:16px\"><span style=\"font-size:18px; line-height:26px; color:#FFFFFF; font-family:'Roboto',sans-serif\">Agent Alert</span> <span style=\"font-size:18px; line-height:26px; color:#FFFFFF; font-family:'Roboto',sans-serif; margin-left:12px; margin-right:12px\">|</span> <span style=\"font-size:18px; line-height:26px; color:#FFFFFF; text-transform:none; font-family:'Roboto',sans-serif\">Endpoint Backup for PCs</span> </td></tr></tbody></table></td></tr></tbody></table><table align=\"center\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td class=\"col\" style=\"padding-left:16px; padding-right:16px; padding-top:16px\"><p style=\"font-size:36px; margin-top:24px; margin-bottom:24px\"><b style=\"line-height:normal\">Agent Not Checking In</b> </p><p>AT01-04-005 has stopped communicating with the Datto Cloud. The last time we've heard from this agent was on <b>June 13, 2025 11:15</b>, which exceeds your configured threshold of <b>7 days</b>. </p><p><table cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\"><tbody><tr><th bgcolor=\"#199ED9\" style=\"border-radius:3px\"><a href=\"https://helpdesk.kaseya.com/hc/en-gb/search?query=endpoint%20backup%20for%20pcs%20checkin%20failure\" style=\"color:#FFFFFF; display:inline-block; font-size:14px; line-height:100%; padding:12px 42px; text-decoration:none\">ENDPOINT BACKUP FOR PCs KB </a></th></tr></tbody></table></p><p>Agent Name: AT01-04-005<br>Agent Shortcode: YGFP2XEJM<br>Organization Name: Astech Air Conditioning </p><table cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"100%\" style=\"margin-top:32px; margin-bottom:32px\"><tbody><tr><td class=\"spacer py-sm-16\" bgcolor=\"#FFFFFF\" height=\"16\"></td></tr></tbody></table><p>You are receiving this email because you are subscribed to receive them. To see and edit alerts and their subscribed users, go to the <a href=\"https://portal.dattobackup.com/cloud-continuity/client/265874\">Astech Air Conditioning Endpoint Backup for PCs Settings</a> page. </p><p>If you have any questions, please submit them through <a href=\"https://helpdesk.kaseya.com\">Support Help Center</a> </p><p>Please do not reply to this email. </p><br></td></tr><tr><td><div style=\"background-color:#001D30; padding:15px 0 15px 15px\"><img src=\"https://assets.dattobackup.com/logo/DattoAKaseyaCompanyWhite.svg\" alt=\"DattoAKaseyaCompanyLogo\" width=\"54\" height=\"25\"> <p style=\"font-size:10px; line-height:normal; color:#FFFFFF; background-color:#001D30; font-family:'Roboto',sans-serif\">© Copyright Datto, Inc. | 101 Merritt 7 | Norwalk, CT | 06851 | USA | 888.294.6312<br>Datto Canada Enterprises, Inc. | 300 Town Centre Blvd | Markham, ON | L3R 5Z6 | Canada | 877.811.0577<br>Datto AsiaPac Pty Ltd | Level 7, 15 Castlereagh St | Sydney 2000 | NSW, Australia | +61 (02) 9696 8190<br>Datto Europe | 250 Longwater Avenue | READING | RG2 6GB | +44 (0) 118 402 9606<br>Datto Singapore PTE LTD | #09-38, Paya Lebar Square | Singapore 409051 </p></div></td></tr></tbody></table></div></td></tr></tbody></table></td></tr></tbody></table></body></html>"
+		},
+		"sender": {
+			"emailAddress": {
+				"name": "Datto",
+				"address": "noreply@datto.com"
+			}
+		},
+		"from": {
+			"emailAddress": {
+				"name": "Datto",
+				"address": "noreply@datto.com"
+			}
+		},
+		"toRecipients": [
+			{
+				"emailAddress": {
+					"name": "Tanel Tamm",
+					"address": "tanel@panoptic.ie"
+				}
+			},
+			{
+				"emailAddress": {
+					"name": "dattocc.panoptic.ie@email.eu.autotask.net",
+					"address": "dattocc.panoptic.ie@email.eu.autotask.net"
+				}
+			},
+			{
+				"emailAddress": {
+					"name": "Automations",
+					"address": "Automations@panoptic.ie"
+				}
+			}
+		],
+		"ccRecipients": [],
+		"bccRecipients": [],
+		"replyTo": [],
+		"flag": {
+			"flagStatus": "notFlagged"
+		},
+		"id": "AQMkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhAEYAAAMqbVChjF5_SYicP-RtjQScBwB-M1m4xEjGR5p-W9u92WuzAAACAQwAAAB-M1m4xEjGR5p-W9u92WuzAAAAvZKl0QAAAA=="
+	},
+	{
+		"@odata.etag": "W/\"CQAAABYAAAB/M1m4xEjGR5p/W9u92WuzAAC9Pvnx\"",
+		"createdDateTime": "2025-07-03T05:18:38Z",
+		"lastModifiedDateTime": "2025-07-03T05:18:39Z",
+		"changeKey": "CQAAABYAAAB/M1m4xEjGR5p/W9u92WuzAAC9Pvnx",
+		"categories": [],
+		"receivedDateTime": "2025-07-03T05:18:38Z",
+		"sentDateTime": "2025-07-03T05:18:30Z",
+		"hasAttachments": false,
+		"internetMessageId": "<97a788bec7ed9ce34bbf6b734ba690a1@purroritymail.datto.net>",
+		"subject": "Endpoint Backup Agent (DESKTOP-17HC15J) Backup Not Taken for Client (Astech Air Conditioning)",
+		"bodyPreview": "Agent Alert | Endpoint Backup for PCs\r\n\r\nBackup Not Taken\r\n\r\nDESKTOP-17HC15J has stopped taking backup. The last time a backup was taken from this agent was on June 26, 2025 23:40 UTC, which exceeds your configured threshold of 1 days. If you would like a",
+		"importance": "normal",
+		"parentFolderId": "AQMkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhAC4AAAMqbVChjF5_SYicP-RtjQScAQB-M1m4xEjGR5p-W9u92WuzAAACAQwAAAA=",
+		"conversationId": "AQQkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhABAAnquHPeJx0EaGct2PViHjKw==",
+		"conversationIndex": "AQHb69nunquHPeJx0EaGct2PViHjKw==",
+		"isDeliveryReceiptRequested": null,
+		"isReadReceiptRequested": false,
+		"isRead": false,
+		"isDraft": false,
+		"webLink": "https://outlook.office365.com/owa/?ItemID=AQMkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhAEYAAAMqbVChjF5%2BSYicP%2FRtjQScBwB%2FM1m4xEjGR5p%2FW9u92WuzAAACAQwAAAB%2FM1m4xEjGR5p%2FW9u92WuzAAAAvZKl0gAAAA%3D%3D&exvsurl=1&viewmodel=ReadMessageItem",
+		"inferenceClassification": "focused",
+		"body": {
+			"contentType": "html",
+			"content": "<html lang=\"en\"><head>\r\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"><meta content=\"ie=edge\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta name=\"x-apple-disable-message-reformatting\"><style type=\"text/css\">\r\n<!--\r\n@media only screen {\r\n.col, td, th, div, p\r\n\t{font-family:-apple-system,system-ui,BlinkMacSystemFont,\"Segoe UI\",\"Roboto\",\"Helvetica Neue\",Arial,sans-serif}\r\n.serif\r\n\t{font-family:'Merriweather',Georgia,serif}\r\n.sans-serif\r\n\t{font-family:'Open Sans',Arial,sans-serif}\r\n\r\n\t}\r\n#outlook a\r\n\t{padding:0}\r\nimg\r\n\t{border:0;\r\n\tline-height:100%;\r\n\tvertical-align:middle}\r\n.col\r\n\t{font-size:16px;\r\n\tline-height:25px;\r\n\tvertical-align:top}\r\n@media only screen and (max-width: 632px) {\r\n.wrapper img\r\n\t{max-width:100%}\r\nu ~ div .wrapper\r\n\t{min-width:100vw}\r\n.container\r\n\t{width:100%!important}\r\n\r\n\t}\r\n@media only screen and (max-width: 480px) {\r\n.col\r\n\t{box-sizing:border-box;\r\n\tdisplay:inline-block!important;\r\n\tline-height:23px;\r\n\twidth:100%!important}\r\n\r\n\t}\r\n-->\r\n</style></head><body style=\"box-sizing:border-box; margin:0; padding:0; width:100%; word-break:break-word\"><div lang=\"en\" style=\"display:none; font-size:0; line-height:0\"></div><table lang=\"en\" class=\"wrapper\" bgcolor=\"#FFFFFF\" cellpadding=\"16\" cellspacing=\"0\" role=\"presentation\" width=\"100%\"><tbody><tr><td align=\"center\"><table class=\"container\" bgcolor=\"#FFFFFF\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td align=\"left\"><div style=\"color:#355460; font-family:'Roboto',sans-serif\"><table align=\"center\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td bgcolor=\"#F3523E\"><table align=\"center\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td bgcolor=\"#F3523E\" style=\"padding-top:15px; padding-right:16px; padding-bottom:19px; padding-left:16px\"><span style=\"font-size:18px; line-height:26px; color:#FFFFFF; font-family:'Roboto',sans-serif\">Agent Alert</span> <span style=\"font-size:18px; line-height:26px; color:#FFFFFF; font-family:'Roboto',sans-serif; margin-left:12px; margin-right:12px\">|</span> <span style=\"font-size:18px; line-height:26px; color:#FFFFFF; text-transform:none; font-family:'Roboto',sans-serif\">Endpoint Backup for PCs</span> </td></tr></tbody></table></td></tr></tbody></table><table align=\"center\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td class=\"col\" style=\"padding-left:16px; padding-right:16px; padding-top:16px\"><p style=\"font-size:36px; margin-top:24px; margin-bottom:24px\"><b style=\"line-height:normal\">Backup Not Taken</b> </p><p>DESKTOP-17HC15J has stopped taking backup. The last time a backup was taken from this agent was on <b>June 26, 2025 23:40 UTC</b>, which exceeds your configured threshold of <b>1 days</b>. If you would like assistance, please contact <a href=\"https://helpdesk.kaseya.com\">Support Help Center</a> . </p><p><table cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\"><tbody><tr><th bgcolor=\"#199ED9\" style=\"border-radius:3px\"><a href=\"https://helpdesk.kaseya.com/hc/en-gb/search?query=endpoint%20backup%20for%20pcs%20backup%20not%20taken\" style=\"color:#FFFFFF; display:inline-block; font-size:14px; line-height:100%; padding:12px 42px; text-decoration:none\">ENDPOINT BACKUP FOR PCs KB </a></th></tr></tbody></table></p><p>Agent Name: DESKTOP-17HC15J<br>Agent Shortcode: E254DTZRV<br>Organization Name: Astech Air Conditioning </p><table cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"100%\" style=\"margin-top:32px; margin-bottom:32px\"><tbody><tr><td class=\"spacer py-sm-16\" bgcolor=\"#FFFFFF\" height=\"16\"></td></tr></tbody></table><p>You are receiving this email because you are subscribed to receive them. To see and edit alerts and their subscribed users, go to the <a href=\"https://portal.dattobackup.com/cloud-continuity/client/265874\">Astech Air Conditioning Endpoint Backup for PCs Settings</a> page. </p><p>If you have any questions, please submit them through <a href=\"https://helpdesk.kaseya.com\">Support Help Center</a> </p><p>Please do not reply to this email. </p><br></td></tr><tr><td><div style=\"background-color:#001D30; padding:15px 0 15px 15px\"><img src=\"https://assets.dattobackup.com/logo/DattoAKaseyaCompanyWhite.svg\" alt=\"DattoAKaseyaCompanyLogo\" width=\"54\" height=\"25\"> <p style=\"font-size:10px; line-height:normal; color:#FFFFFF; background-color:#001D30; font-family:'Roboto',sans-serif\">© Copyright Datto, Inc. | 101 Merritt 7 | Norwalk, CT | 06851 | USA | 888.294.6312<br>Datto Canada Enterprises, Inc. | 300 Town Centre Blvd | Markham, ON | L3R 5Z6 | Canada | 877.811.0577<br>Datto AsiaPac Pty Ltd | Level 7, 15 Castlereagh St | Sydney 2000 | NSW, Australia | +61 (02) 9696 8190<br>Datto Europe | 250 Longwater Avenue | READING | RG2 6GB | +44 (0) 118 402 9606<br>Datto Singapore PTE LTD | #09-38, Paya Lebar Square | Singapore 409051 </p></div></td></tr></tbody></table></div></td></tr></tbody></table></td></tr></tbody></table></body></html>"
+		},
+		"sender": {
+			"emailAddress": {
+				"name": "Datto",
+				"address": "noreply@datto.com"
+			}
+		},
+		"from": {
+			"emailAddress": {
+				"name": "Datto",
+				"address": "noreply@datto.com"
+			}
+		},
+		"toRecipients": [
+			{
+				"emailAddress": {
+					"name": "Tanel Tamm",
+					"address": "tanel@panoptic.ie"
+				}
+			},
+			{
+				"emailAddress": {
+					"name": "dattocc.panoptic.ie@email.eu.autotask.net",
+					"address": "dattocc.panoptic.ie@email.eu.autotask.net"
+				}
+			},
+			{
+				"emailAddress": {
+					"name": "Automations",
+					"address": "Automations@panoptic.ie"
+				}
+			}
+		],
+		"ccRecipients": [],
+		"bccRecipients": [],
+		"replyTo": [],
+		"flag": {
+			"flagStatus": "notFlagged"
+		},
+		"id": "AQMkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhAEYAAAMqbVChjF5_SYicP-RtjQScBwB-M1m4xEjGR5p-W9u92WuzAAACAQwAAAB-M1m4xEjGR5p-W9u92WuzAAAAvZKl0gAAAA=="
+	},
+	{
+		"@odata.etag": "W/\"CQAAABYAAAB/M1m4xEjGR5p/W9u92WuzAAC9Pvn1\"",
+		"createdDateTime": "2025-07-03T05:18:38Z",
+		"lastModifiedDateTime": "2025-07-03T05:18:39Z",
+		"changeKey": "CQAAABYAAAB/M1m4xEjGR5p/W9u92WuzAAC9Pvn1",
+		"categories": [],
+		"receivedDateTime": "2025-07-03T05:18:39Z",
+		"sentDateTime": "2025-07-03T05:18:30Z",
+		"hasAttachments": false,
+		"internetMessageId": "<49c2920e2d7ca6584af0a368e5ef3972@purroritymail.datto.net>",
+		"subject": "Endpoint Backup Agent (AT01-03-017) Backup Not Taken for Client (Astech Air Conditioning)",
+		"bodyPreview": "Agent Alert | Endpoint Backup for PCs\r\n\r\nBackup Not Taken\r\n\r\nAT01-03-017 has stopped taking backup. The last time a backup was taken from this agent was on June 20, 2025 12:22 UTC, which exceeds your configured threshold of 1 days. If you would like assis",
+		"importance": "normal",
+		"parentFolderId": "AQMkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhAC4AAAMqbVChjF5_SYicP-RtjQScAQB-M1m4xEjGR5p-W9u92WuzAAACAQwAAAA=",
+		"conversationId": "AQQkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhABAAHNoqtNRpaEysauBIQXljBQ==",
+		"conversationIndex": "AQHb69nvHNoqtNRpaEysauBIQXljBQ==",
+		"isDeliveryReceiptRequested": null,
+		"isReadReceiptRequested": false,
+		"isRead": false,
+		"isDraft": false,
+		"webLink": "https://outlook.office365.com/owa/?ItemID=AQMkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhAEYAAAMqbVChjF5%2BSYicP%2FRtjQScBwB%2FM1m4xEjGR5p%2FW9u92WuzAAACAQwAAAB%2FM1m4xEjGR5p%2FW9u92WuzAAAAvZKl0wAAAA%3D%3D&exvsurl=1&viewmodel=ReadMessageItem",
+		"inferenceClassification": "focused",
+		"body": {
+			"contentType": "html",
+			"content": "<html lang=\"en\"><head>\r\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"><meta content=\"ie=edge\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta name=\"x-apple-disable-message-reformatting\"><style type=\"text/css\">\r\n<!--\r\n@media only screen {\r\n.col, td, th, div, p\r\n\t{font-family:-apple-system,system-ui,BlinkMacSystemFont,\"Segoe UI\",\"Roboto\",\"Helvetica Neue\",Arial,sans-serif}\r\n.serif\r\n\t{font-family:'Merriweather',Georgia,serif}\r\n.sans-serif\r\n\t{font-family:'Open Sans',Arial,sans-serif}\r\n\r\n\t}\r\n#outlook a\r\n\t{padding:0}\r\nimg\r\n\t{border:0;\r\n\tline-height:100%;\r\n\tvertical-align:middle}\r\n.col\r\n\t{font-size:16px;\r\n\tline-height:25px;\r\n\tvertical-align:top}\r\n@media only screen and (max-width: 632px) {\r\n.wrapper img\r\n\t{max-width:100%}\r\nu ~ div .wrapper\r\n\t{min-width:100vw}\r\n.container\r\n\t{width:100%!important}\r\n\r\n\t}\r\n@media only screen and (max-width: 480px) {\r\n.col\r\n\t{box-sizing:border-box;\r\n\tdisplay:inline-block!important;\r\n\tline-height:23px;\r\n\twidth:100%!important}\r\n\r\n\t}\r\n-->\r\n</style></head><body style=\"box-sizing:border-box; margin:0; padding:0; width:100%; word-break:break-word\"><div lang=\"en\" style=\"display:none; font-size:0; line-height:0\"></div><table lang=\"en\" class=\"wrapper\" bgcolor=\"#FFFFFF\" cellpadding=\"16\" cellspacing=\"0\" role=\"presentation\" width=\"100%\"><tbody><tr><td align=\"center\"><table class=\"container\" bgcolor=\"#FFFFFF\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td align=\"left\"><div style=\"color:#355460; font-family:'Roboto',sans-serif\"><table align=\"center\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td bgcolor=\"#F3523E\"><table align=\"center\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td bgcolor=\"#F3523E\" style=\"padding-top:15px; padding-right:16px; padding-bottom:19px; padding-left:16px\"><span style=\"font-size:18px; line-height:26px; color:#FFFFFF; font-family:'Roboto',sans-serif\">Agent Alert</span> <span style=\"font-size:18px; line-height:26px; color:#FFFFFF; font-family:'Roboto',sans-serif; margin-left:12px; margin-right:12px\">|</span> <span style=\"font-size:18px; line-height:26px; color:#FFFFFF; text-transform:none; font-family:'Roboto',sans-serif\">Endpoint Backup for PCs</span> </td></tr></tbody></table></td></tr></tbody></table><table align=\"center\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"600\"><tbody><tr><td class=\"col\" style=\"padding-left:16px; padding-right:16px; padding-top:16px\"><p style=\"font-size:36px; margin-top:24px; margin-bottom:24px\"><b style=\"line-height:normal\">Backup Not Taken</b> </p><p>AT01-03-017 has stopped taking backup. The last time a backup was taken from this agent was on <b>June 20, 2025 12:22 UTC</b>, which exceeds your configured threshold of <b>1 days</b>. If you would like assistance, please contact <a href=\"https://helpdesk.kaseya.com\">Support Help Center</a> . </p><p><table cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\"><tbody><tr><th bgcolor=\"#199ED9\" style=\"border-radius:3px\"><a href=\"https://helpdesk.kaseya.com/hc/en-gb/search?query=endpoint%20backup%20for%20pcs%20backup%20not%20taken\" style=\"color:#FFFFFF; display:inline-block; font-size:14px; line-height:100%; padding:12px 42px; text-decoration:none\">ENDPOINT BACKUP FOR PCs KB </a></th></tr></tbody></table></p><p>Agent Name: AT01-03-017<br>Agent Shortcode: EFAY7DCZ9<br>Organization Name: Astech Air Conditioning </p><table cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"100%\" style=\"margin-top:32px; margin-bottom:32px\"><tbody><tr><td class=\"spacer py-sm-16\" bgcolor=\"#FFFFFF\" height=\"16\"></td></tr></tbody></table><p>You are receiving this email because you are subscribed to receive them. To see and edit alerts and their subscribed users, go to the <a href=\"https://portal.dattobackup.com/cloud-continuity/client/265874\">Astech Air Conditioning Endpoint Backup for PCs Settings</a> page. </p><p>If you have any questions, please submit them through <a href=\"https://helpdesk.kaseya.com\">Support Help Center</a> </p><p>Please do not reply to this email. </p><br></td></tr><tr><td><div style=\"background-color:#001D30; padding:15px 0 15px 15px\"><img src=\"https://assets.dattobackup.com/logo/DattoAKaseyaCompanyWhite.svg\" alt=\"DattoAKaseyaCompanyLogo\" width=\"54\" height=\"25\"> <p style=\"font-size:10px; line-height:normal; color:#FFFFFF; background-color:#001D30; font-family:'Roboto',sans-serif\">© Copyright Datto, Inc. | 101 Merritt 7 | Norwalk, CT | 06851 | USA | 888.294.6312<br>Datto Canada Enterprises, Inc. | 300 Town Centre Blvd | Markham, ON | L3R 5Z6 | Canada | 877.811.0577<br>Datto AsiaPac Pty Ltd | Level 7, 15 Castlereagh St | Sydney 2000 | NSW, Australia | +61 (02) 9696 8190<br>Datto Europe | 250 Longwater Avenue | READING | RG2 6GB | +44 (0) 118 402 9606<br>Datto Singapore PTE LTD | #09-38, Paya Lebar Square | Singapore 409051 </p></div></td></tr></tbody></table></div></td></tr></tbody></table></td></tr></tbody></table></body></html>"
+		},
+		"sender": {
+			"emailAddress": {
+				"name": "Datto",
+				"address": "noreply@datto.com"
+			}
+		},
+		"from": {
+			"emailAddress": {
+				"name": "Datto",
+				"address": "noreply@datto.com"
+			}
+		},
+		"toRecipients": [
+			{
+				"emailAddress": {
+					"name": "Tanel Tamm",
+					"address": "tanel@panoptic.ie"
+				}
+			},
+			{
+				"emailAddress": {
+					"name": "dattocc.panoptic.ie@email.eu.autotask.net",
+					"address": "dattocc.panoptic.ie@email.eu.autotask.net"
+				}
+			},
+			{
+				"emailAddress": {
+					"name": "Automations",
+					"address": "Automations@panoptic.ie"
+				}
+			}
+		],
+		"ccRecipients": [],
+		"bccRecipients": [],
+		"replyTo": [],
+		"flag": {
+			"flagStatus": "notFlagged"
+		},
+		"id": "AQMkADNiMTJhNmNhLTIyAi00OTI4LWFiMGYtYTA5OGIxZTA4YWNhAEYAAAMqbVChjF5_SYicP-RtjQScBwB-M1m4xEjGR5p-W9u92WuzAAACAQwAAAB-M1m4xEjGR5p-W9u92WuzAAAAvZKl0wAAAA=="
+	}
+]

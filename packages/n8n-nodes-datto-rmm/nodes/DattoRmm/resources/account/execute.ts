@@ -11,11 +11,10 @@ export async function executeAccountOperation(
 	const returnData: INodeExecutionData[] = [];
 
 	return handleErrors(this, async () => {
-		// For operations that retrieve lists or account info,
+		// For most operations that retrieve lists or account info,
 		// execute only once regardless of input count to avoid duplicates
-		const listOperations = [
+		const singleExecutionOperations = [
 			'get',
-			'getDevices',
 			'getUsers',
 			'getComponents',
 			'getOpenAlerts',
@@ -23,8 +22,113 @@ export async function executeAccountOperation(
 			'getSites',
 			'getVariables',
 		];
-		const executeOnce = listOperations.includes(operation);
+
+		// getDevices can now handle multiple input items for hostname filtering
+		const executeOnce = singleExecutionOperations.includes(operation);
 		const itemsToProcess = executeOnce ? [items[0]] : items;
+
+		// Special handling for getDevices with multiple hostnames
+		if (operation === 'getDevices' && items.length > 1) {
+			// Collect all unique hostnames from input items
+			const hostnames = new Set<string>();
+			const allDevices: any[] = [];
+
+			// Get unique hostnames from all input items
+			for (let i = 0; i < items.length; i++) {
+				const hostname = this.getNodeParameter('hostname', i, '') as string;
+				const safeHostname = hostname?.toString?.()?.trim?.() || '';
+				if (safeHostname !== '') {
+					hostnames.add(safeHostname);
+				}
+			}
+
+			if (hostnames.size > 0) {
+				// Search for each hostname individually and combine results
+				for (const hostname of hostnames) {
+					const retrieveAll = this.getNodeParameter('retrieveAll', 0, true) as boolean;
+					const filterId = this.getNodeParameter('filterId', 0, 0) as number;
+					const deviceType = this.getNodeParameter('deviceType', 0, '') as string;
+					const operatingSystem = this.getNodeParameter('operatingSystem', 0, '') as string;
+					const siteName = this.getNodeParameter('siteName', 0, '') as string;
+
+					const queryParams: Record<string, string | number> = {};
+
+					// Add filters if provided
+					if (filterId > 0) {
+						queryParams.filterId = filterId;
+					}
+
+					queryParams.hostname = hostname;
+
+					const safeDeviceType = deviceType?.toString?.()?.trim?.() || '';
+					if (safeDeviceType !== '') {
+						queryParams.deviceType = safeDeviceType;
+					}
+
+					const safeOperatingSystem = operatingSystem?.toString?.()?.trim?.() || '';
+					if (safeOperatingSystem !== '') {
+						queryParams.operatingSystem = safeOperatingSystem;
+					}
+
+					const safeSiteName = siteName?.toString?.()?.trim?.() || '';
+					if (safeSiteName !== '') {
+						queryParams.siteName = safeSiteName;
+					}
+
+					let responseData;
+					if (retrieveAll) {
+						// Use automatic pagination to get all results
+						const devices = await dattoRmmApiRequestAllItems.call(
+							this,
+							'GET',
+							'/api/v2/account/devices',
+							{},
+							queryParams,
+						);
+						allDevices.push(...devices);
+					} else {
+						// Use manual pagination
+						const page = this.getNodeParameter('page', 0, 0) as number;
+						const max = this.getNodeParameter('max', 0, 100) as number;
+						queryParams.page = page;
+						queryParams.max = max;
+
+						responseData = await dattoRmmApiRequest.call(
+							this,
+							'GET',
+							'/api/v2/account/devices',
+							{},
+							queryParams,
+						);
+
+						const devices = responseData.devices || [];
+						allDevices.push(...devices);
+					}
+				}
+			}
+
+			// Return all found devices
+			if (allDevices.length > 0) {
+				allDevices.forEach((device: any) => {
+					returnData.push({
+						json: device,
+						pairedItem: { item: 0 },
+					});
+				});
+			} else {
+				// No devices found
+				returnData.push({
+					json: {
+						message: 'No devices found for the specified hostnames',
+						searchedHostnames: Array.from(hostnames),
+						operation: operation,
+					},
+					pairedItem: { item: 0 },
+				});
+			}
+
+			return [returnData];
+		}
 
 		for (let i = 0; i < itemsToProcess.length; i++) {
 			const itemIndex = executeOnce ? 0 : i;

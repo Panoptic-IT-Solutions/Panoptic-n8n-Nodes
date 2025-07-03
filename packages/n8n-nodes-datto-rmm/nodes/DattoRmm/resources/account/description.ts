@@ -159,7 +159,8 @@ export const accountFields: INodeProperties[] = [
 				operation: ['getDevices'],
 			},
 		},
-		description: 'Filter devices by hostname (partial matches supported)',
+		description:
+			"Filter devices by hostname (partial matches supported). When multiple input items are provided, each item's hostname will be searched individually.",
 	},
 	{
 		displayName: 'Device Type Filter',
