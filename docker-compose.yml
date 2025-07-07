@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - '5678:5678'
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=UTC
+      # Enable community nodes
+      - N8N_COMMUNITY_PACKAGES_ENABLED=true
+      # Custom nodes path
+      - N8N_CUSTOM_EXTENSIONS=/opt/custom-nodes
+    volumes:
+      # Mount your custom DattoRmm node
+      - ./dist:/opt/custom-nodes/@panoptic-it-solutions/n8n-nodes-datto-rmm:ro
+      # Persist n8n data
+      - n8n_data:/home/node/.n8n
+      # Optional: Mount local files for workflows
+      - ./workflows:/opt/workflows:ro
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15
+    container_name: n8n-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=n8n
+      - POSTGRES_USER=n8n
+      - POSTGRES_PASSWORD=n8n_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
+volumes:
+  n8n_data:
+  postgres_data:
