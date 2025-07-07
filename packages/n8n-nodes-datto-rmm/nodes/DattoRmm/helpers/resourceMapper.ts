@@ -148,6 +148,150 @@ function getResourceSpecificFields(resource: string) {
 				},
 			];
 
+		case 'job':
+			return [
+				{
+					id: 'jobUid',
+					displayName: 'Job UID',
+					required: false,
+					defaultMatch: false,
+					canBeUsedToMatch: true,
+					display: true,
+				},
+				{
+					id: 'jobName',
+					displayName: 'Job Name',
+					required: false,
+					defaultMatch: false,
+					canBeUsedToMatch: true,
+					display: true,
+				},
+				{
+					id: 'status',
+					displayName: 'Status',
+					required: false,
+					defaultMatch: false,
+					canBeUsedToMatch: false,
+					display: true,
+				},
+				{
+					id: 'deviceUid',
+					displayName: 'Device UID',
+					required: false,
+					defaultMatch: false,
+					canBeUsedToMatch: true,
+					display: true,
+				},
+			];
+
+		case 'audit':
+			return [
+				{
+					id: 'deviceUid',
+					displayName: 'Device UID',
+					required: false,
+					defaultMatch: false,
+					canBeUsedToMatch: true,
+					display: true,
+				},
+				{
+					id: 'auditType',
+					displayName: 'Audit Type',
+					required: false,
+					defaultMatch: false,
+					canBeUsedToMatch: true,
+					display: true,
+				},
+				{
+					id: 'lastAuditDate',
+					displayName: 'Last Audit Date',
+					required: false,
+					defaultMatch: false,
+					canBeUsedToMatch: false,
+					display: true,
+				},
+				{
+					id: 'version',
+					displayName: 'Version',
+					required: false,
+					defaultMatch: false,
+					canBeUsedToMatch: false,
+					display: true,
+				},
+			];
+
+		case 'system':
+			return [
+				{
+					id: 'status',
+					displayName: 'System Status',
+					required: false,
+					defaultMatch: false,
+					canBeUsedToMatch: true,
+					display: true,
+				},
+				{
+					id: 'version',
+					displayName: 'API Version',
+					required: false,
+					defaultMatch: false,
+					canBeUsedToMatch: false,
+					display: true,
+				},
+				{
+					id: 'rateLimit',
+					displayName: 'Rate Limit',
+					required: false,
+					defaultMatch: false,
+					canBeUsedToMatch: false,
+					display: true,
+				},
+				{
+					id: 'requestsRemaining',
+					displayName: 'Requests Remaining',
+					required: false,
+					defaultMatch: false,
+					canBeUsedToMatch: false,
+					display: true,
+				},
+			];
+
+		case 'filter':
+			return [
+				{
+					id: 'filterUid',
+					displayName: 'Filter UID',
+					required: false,
+					defaultMatch: false,
+					canBeUsedToMatch: true,
+					display: true,
+				},
+				{
+					id: 'name',
+					displayName: 'Filter Name',
+					required: false,
+					defaultMatch: false,
+					canBeUsedToMatch: true,
+					display: true,
+				},
+				{
+					id: 'category',
+					displayName: 'Category',
+					required: false,
+					defaultMatch: false,
+					canBeUsedToMatch: true,
+					display: true,
+				},
+				{
+					id: 'criteria',
+					displayName: 'Filter Criteria',
+					required: false,
+					defaultMatch: false,
+					canBeUsedToMatch: false,
+					display: true,
+				},
+			];
+
 		default:
 			return [
 				{

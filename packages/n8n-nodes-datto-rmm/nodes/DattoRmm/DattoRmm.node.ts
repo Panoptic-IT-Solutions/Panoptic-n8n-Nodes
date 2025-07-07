@@ -12,6 +12,10 @@ import { executeAccountOperation } from './resources/account/execute';
 import { executeDeviceOperation } from './resources/device/execute';
 import { executeSiteOperation } from './resources/site/execute';
 import { executeAlertOperation } from './resources/alert/execute';
+import { executeJobOperation } from './resources/job/execute';
+import { executeAuditOperation } from './resources/audit/execute';
+import { executeSystemOperation } from './resources/system/execute';
+import { executeFilterOperation } from './resources/filter/execute';
 
 // Import resource definitions and field descriptions
 import { RESOURCE_DEFINITIONS } from './resources/definitions';
@@ -19,6 +23,10 @@ import { accountFields } from './resources/account/description';
 import { deviceFields } from './resources/device/description';
 import { siteFields } from './resources/site/description';
 import { alertFields } from './resources/alert/description';
+import { jobFields } from './resources/job/description';
+import { auditFields } from './resources/audit/description';
+import { systemFields } from './resources/system/description';
+import { filterFields } from './resources/filter/description';
 import { addOperationsToResource } from './helpers/resource-operations.helper';
 import { getResourceMapperFields } from './helpers/resourceMapper';
 
@@ -68,6 +76,10 @@ export class DattoRmm implements INodeType {
 			...addOperationsToResource(deviceFields, { resourceName: 'device' }),
 			...addOperationsToResource(siteFields, { resourceName: 'site' }),
 			...addOperationsToResource(alertFields, { resourceName: 'alert' }),
+			...addOperationsToResource(jobFields, { resourceName: 'job' }),
+			...addOperationsToResource(auditFields, { resourceName: 'audit' }),
+			...addOperationsToResource(systemFields, { resourceName: 'system' }),
+			...addOperationsToResource(filterFields, { resourceName: 'filter' }),
 		],
 	};
 
@@ -88,15 +100,17 @@ export class DattoRmm implements INodeType {
 			case 'alert':
 				return executeAlertOperation.call(this);
 
-			// TODO: Add other resources as they are implemented
-			// case 'job':
-			//     return executeJobOperation.call(this);
-			// case 'audit':
-			//     return executeAuditOperation.call(this);
-			// case 'system':
-			//     return executeSystemOperation.call(this);
-			// case 'filter':
-			//     return executeFilterOperation.call(this);
+			case 'job':
+				return executeJobOperation.call(this);
+
+			case 'audit':
+				return executeAuditOperation.call(this);
+
+			case 'system':
+				return executeSystemOperation.call(this);
+
+			case 'filter':
+				return executeFilterOperation.call(this);
 
 			default:
 				throw new NodeOperationError(
@@ -140,9 +154,168 @@ export class DattoRmm implements INodeType {
 				}
 			},
 
-			// TODO: Add more dynamic loading functions as needed
-			// async getQueryableEntities(this: ILoadOptionsFunctions) { ... }
-			// async getEntityFields(this: ILoadOptionsFunctions) { ... }
+			// Dynamic loading for Sites
+			async getSites(this: ILoadOptionsFunctions) {
+				try {
+					const { dattoRmmApiRequest } = await import('./helpers/api.helper');
+					const response = await dattoRmmApiRequest.call(this, 'GET', '/api/v2/site');
+
+					if (response?.data && Array.isArray(response.data)) {
+						return response.data.map((site: any) => ({
+							name: `${site.name} (${site.uid})`,
+							value: site.uid,
+						}));
+					}
+					return [];
+				} catch (error) {
+					console.error('Error loading sites:', error.message);
+					return [];
+				}
+			},
+
+			// Dynamic loading for Open Alerts
+			async getOpenAlerts(this: ILoadOptionsFunctions) {
+				try {
+					const { dattoRmmApiRequest } = await import('./helpers/api.helper');
+					const response = await dattoRmmApiRequest.call(
+						this,
+						'GET',
+						'/api/v2/account/alerts/open',
+					);
+
+					if (response?.data && Array.isArray(response.data)) {
+						return response.data.map((alert: any) => ({
+							name: `${alert.alertType || 'Alert'} - ${alert.deviceName || alert.uid} (${alert.priority || 'Normal'})`,
+							value: alert.uid,
+						}));
+					}
+					return [];
+				} catch (error) {
+					console.error('Error loading alerts:', error.message);
+					return [];
+				}
+			},
+
+			// Dynamic loading for Devices
+			async getDevices(this: ILoadOptionsFunctions) {
+				try {
+					const { dattoRmmApiRequest } = await import('./helpers/api.helper');
+					const response = await dattoRmmApiRequest.call(this, 'GET', '/api/v2/account/devices');
+
+					if (response?.data && Array.isArray(response.data)) {
+						return response.data.map((device: any) => ({
+							name: `${device.hostname || device.displayName || 'Unknown'} - ${device.deviceType || 'Device'} (${device.uid})`,
+							value: device.uid,
+						}));
+					}
+					return [];
+				} catch (error) {
+					console.error('Error loading devices:', error.message);
+					return [];
+				}
+			},
+
+			// Dynamic loading for Jobs
+			async getJobs(this: ILoadOptionsFunctions) {
+				try {
+					const { dattoRmmApiRequestAllItems } = await import('./helpers/api.helper');
+					const jobs = await dattoRmmApiRequestAllItems.call(this, 'GET', '/api/v2/job');
+					return jobs.map((job: any) => ({
+						name: `${job.name} (${job.status})`,
+						value: job.uid,
+					}));
+				} catch {
+					return [];
+				}
+			},
+
+			// Dynamic loading for Site-specific Devices
+			async getSiteDevices(this: ILoadOptionsFunctions) {
+				try {
+					const siteUid = this.getNodeParameter('siteUid', 0) as string;
+					if (!siteUid) return [];
+
+					const { dattoRmmApiRequest } = await import('./helpers/api.helper');
+					const response = await dattoRmmApiRequest.call(
+						this,
+						'GET',
+						`/api/v2/site/${siteUid}/devices`,
+					);
+
+					if (response?.data && Array.isArray(response.data)) {
+						return response.data.map((device: any) => ({
+							name: `${device.hostname || device.displayName || 'Unknown'} - ${device.deviceType || 'Device'}`,
+							value: device.uid,
+						}));
+					}
+					return [];
+				} catch (error) {
+					console.error('Error loading site devices:', error.message);
+					return [];
+				}
+			},
+
+			// Dynamic loading for Site-specific Open Alerts
+			async getSiteOpenAlerts(this: ILoadOptionsFunctions) {
+				try {
+					const siteUid = this.getNodeParameter('siteUid', 0) as string;
+					if (!siteUid) return [];
+
+					const { dattoRmmApiRequest } = await import('./helpers/api.helper');
+					const response = await dattoRmmApiRequest.call(
+						this,
+						'GET',
+						`/api/v2/site/${siteUid}/alerts/open`,
+					);
+
+					if (response?.data && Array.isArray(response.data)) {
+						return response.data.map((alert: any) => ({
+							name: `${alert.alertType || 'Alert'} - ${alert.deviceName || 'Unknown Device'} (${alert.priority || 'Normal'})`,
+							value: alert.uid,
+						}));
+					}
+					return [];
+				} catch (error) {
+					console.error('Error loading site alerts:', error.message);
+					return [];
+				}
+			},
+
+			// Dynamic loading for Custom Filters
+			async getCustomFilters(this: ILoadOptionsFunctions) {
+				try {
+					const { dattoRmmApiRequest } = await import('./helpers/api.helper');
+					const response = await dattoRmmApiRequest.call(this, 'GET', '/api/v2/filter/custom');
+
+					if (response?.data && Array.isArray(response.data)) {
+						return response.data.map((filter: any) => ({
+							name: `${filter.name} - ${filter.category || 'General'} (${filter.uid})`,
+							value: filter.uid,
+						}));
+					}
+					return [];
+				} catch (error) {
+					console.error('Error loading custom filters:', error.message);
+					return [];
+				}
+			},
+
+			async getComponents(this: ILoadOptionsFunctions) {
+				try {
+					const { dattoRmmApiRequestAllItems } = await import('./helpers/api.helper');
+					const components = await dattoRmmApiRequestAllItems.call(
+						this,
+						'GET',
+						'/api/v2/account/components',
+					);
+					return components.map((component: any) => ({
+						name: `${component.name} - ${component.description || 'No description'}`,
+						value: component.uid,
+					}));
+				} catch {
+					return [];
+				}
+			},
 		},
 	};
 }

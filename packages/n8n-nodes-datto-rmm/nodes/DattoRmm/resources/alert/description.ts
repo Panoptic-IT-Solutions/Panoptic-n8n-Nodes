@@ -42,9 +42,9 @@ export const alertFields: INodeProperties[] = [
 
 	// Alert UID parameter - required for all operations
 	{
-		displayName: 'Alert UID',
+		displayName: 'Alert',
 		name: 'alertUid',
-		type: 'string',
+		type: 'options',
 		default: '',
 		required: true,
 		displayOptions: {
@@ -53,7 +53,10 @@ export const alertFields: INodeProperties[] = [
 				operation: ['get', 'resolve', 'mute', 'unmute'],
 			},
 		},
-		description: 'The unique identifier (UID) of the alert',
+		typeOptions: {
+			loadOptionsMethod: 'getOpenAlerts',
+		},
+		description: 'Select the alert from the list of available open alerts',
 	},
 
 	// Resolution note for resolve operation

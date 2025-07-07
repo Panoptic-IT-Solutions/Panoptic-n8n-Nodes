@@ -71,9 +71,9 @@ export const deviceFields: INodeProperties[] = [
 	},
 	// Device UID parameter
 	{
-		displayName: 'Device UID',
+		displayName: 'Device',
 		name: 'deviceUid',
-		type: 'string',
+		type: 'options',
 		default: '',
 		required: true,
 		displayOptions: {
@@ -90,7 +90,10 @@ export const deviceFields: INodeProperties[] = [
 				],
 			},
 		},
-		description: 'The unique identifier (UID) of the device',
+		typeOptions: {
+			loadOptionsMethod: 'getDevices',
+		},
+		description: 'Select the device from the list of available devices',
 	},
 	// Device ID parameter
 	{
@@ -124,9 +127,9 @@ export const deviceFields: INodeProperties[] = [
 	},
 	// Site UID parameter for move operation
 	{
-		displayName: 'Target Site UID',
+		displayName: 'Target Site',
 		name: 'siteUid',
-		type: 'string',
+		type: 'options',
 		default: '',
 		required: true,
 		displayOptions: {
@@ -135,7 +138,10 @@ export const deviceFields: INodeProperties[] = [
 				operation: ['moveDevice'],
 			},
 		},
-		description: 'The UID of the target site to move the device to',
+		typeOptions: {
+			loadOptionsMethod: 'getSites',
+		},
+		description: 'Select the target site to move the device to',
 	},
 	// Job Name for quick job
 	{
@@ -154,9 +160,9 @@ export const deviceFields: INodeProperties[] = [
 	},
 	// Component UID for quick job
 	{
-		displayName: 'Component UID',
+		displayName: 'Component',
 		name: 'componentUid',
-		type: 'string',
+		type: 'options',
 		default: '',
 		required: true,
 		displayOptions: {
@@ -165,7 +171,10 @@ export const deviceFields: INodeProperties[] = [
 				operation: ['createQuickJob'],
 			},
 		},
-		description: 'UID of the component to run as quick job',
+		typeOptions: {
+			loadOptionsMethod: 'getComponents',
+		},
+		description: 'Select the component to run as a quick job',
 	},
 	// Warranty Date
 	{

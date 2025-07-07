@@ -77,9 +77,9 @@ export const siteFields: INodeProperties[] = [
 	},
 	// Site UID parameter
 	{
-		displayName: 'Site UID',
+		displayName: 'Site',
 		name: 'siteUid',
-		type: 'string',
+		type: 'options',
 		required: true,
 		displayOptions: {
 			show: {
@@ -96,8 +96,11 @@ export const siteFields: INodeProperties[] = [
 				],
 			},
 		},
+		typeOptions: {
+			loadOptionsMethod: 'getSites',
+		},
 		default: '',
-		description: 'The UID of the site',
+		description: 'Select the site from the list of available sites',
 	},
 	// Site creation fields
 	{
