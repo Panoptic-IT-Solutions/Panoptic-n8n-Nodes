@@ -31,7 +31,7 @@ export async function executeAccountOperation(
 		if (operation === 'getDevices' && items.length > 1) {
 			// Collect all unique hostnames from input items
 			const hostnames = new Set<string>();
-			const allDevices: any[] = [];
+			let allDevices: any[] = [];
 
 			// Get unique hostnames from all input items
 			for (let i = 0; i < items.length; i++) {
@@ -41,6 +41,11 @@ export async function executeAccountOperation(
 					hostnames.add(safeHostname);
 				}
 			}
+
+			// Get filtering parameters (use first item's parameters for consistency)
+			const useAdvancedFilters = this.getNodeParameter('useAdvancedFilters', 0, false) as boolean;
+			const filterConditions = this.getNodeParameter('filterConditions', 0, {}) as any;
+			const filterLogic = this.getNodeParameter('filterLogic', 0, 'AND') as 'AND' | 'OR';
 
 			if (hostnames.size > 0) {
 				// Search for each hostname individually and combine results
@@ -104,6 +109,22 @@ export async function executeAccountOperation(
 						const devices = responseData.devices || [];
 						allDevices.push(...devices);
 					}
+				}
+			}
+
+			// Apply advanced filters if enabled
+			if (
+				useAdvancedFilters &&
+				filterConditions?.condition &&
+				Array.isArray(filterConditions.condition)
+			) {
+				const { applyAdvancedFilters, validateFilterConditions } = await import(
+					'../../helpers/deviceFilter'
+				);
+				const validatedConditions = validateFilterConditions(filterConditions.condition);
+
+				if (validatedConditions.length > 0) {
+					allDevices = applyAdvancedFilters(allDevices, validatedConditions, filterLogic);
 				}
 			}
 
@@ -190,6 +211,21 @@ export async function executeAccountOperation(
 							) as string;
 							const siteName = this.getNodeParameter('siteName', itemIndex, '') as string;
 
+							// Advanced filtering parameters
+							const useAdvancedFilters = this.getNodeParameter(
+								'useAdvancedFilters',
+								itemIndex,
+								false,
+							) as boolean;
+							const filterConditions = this.getNodeParameter(
+								'filterConditions',
+								itemIndex,
+								{},
+							) as any;
+							const filterLogic = this.getNodeParameter('filterLogic', itemIndex, 'AND') as
+								| 'AND'
+								| 'OR';
+
 							const queryParams: Record<string, string | number> = {};
 
 							// Add filters if provided - safe string handling
@@ -218,16 +254,17 @@ export async function executeAccountOperation(
 								queryParams.siteName = safeSiteName;
 							}
 
+							let allDevices: any[] = [];
+
 							if (retrieveAll) {
 								// Use automatic pagination to get all results
-								const allDevices = await dattoRmmApiRequestAllItems.call(
+								allDevices = await dattoRmmApiRequestAllItems.call(
 									this,
 									'GET',
 									'/api/v2/account/devices',
 									{},
 									queryParams,
 								);
-								responseData = { devices: allDevices };
 							} else {
 								// Use manual pagination
 								const page = this.getNodeParameter('page', itemIndex, 0) as number;
@@ -235,14 +272,34 @@ export async function executeAccountOperation(
 								queryParams.page = page;
 								queryParams.max = max;
 
-								responseData = await dattoRmmApiRequest.call(
+								const paginatedResponse = await dattoRmmApiRequest.call(
 									this,
 									'GET',
 									'/api/v2/account/devices',
 									{},
 									queryParams,
 								);
+
+								allDevices = paginatedResponse.devices || [];
 							}
+
+							// Apply advanced filters if enabled
+							if (
+								useAdvancedFilters &&
+								filterConditions?.condition &&
+								Array.isArray(filterConditions.condition)
+							) {
+								const { applyAdvancedFilters, validateFilterConditions } = await import(
+									'../../helpers/deviceFilter'
+								);
+								const validatedConditions = validateFilterConditions(filterConditions.condition);
+
+								if (validatedConditions.length > 0) {
+									allDevices = applyAdvancedFilters(allDevices, validatedConditions, filterLogic);
+								}
+							}
+
+							responseData = { devices: allDevices };
 						}
 						break;
 

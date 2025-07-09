@@ -157,16 +157,12 @@ export class DattoRmm implements INodeType {
 			// Dynamic loading for Sites
 			async getSites(this: ILoadOptionsFunctions) {
 				try {
-					const { dattoRmmApiRequest } = await import('./helpers/api.helper');
-					const response = await dattoRmmApiRequest.call(this, 'GET', '/api/v2/site');
-
-					if (response?.data && Array.isArray(response.data)) {
-						return response.data.map((site: any) => ({
-							name: `${site.name} (${site.uid})`,
-							value: site.uid,
-						}));
-					}
-					return [];
+					const { dattoRmmApiRequestAllItems } = await import('./helpers/api.helper');
+					const sites = await dattoRmmApiRequestAllItems.call(this, 'GET', '/api/v2/account/sites');
+					return sites.map((site: any) => ({
+						name: `${site.name} (${site.deviceCount || 0} devices)`,
+						value: site.uid,
+					}));
 				} catch (error) {
 					console.error('Error loading sites:', error.message);
 					return [];
@@ -176,20 +172,16 @@ export class DattoRmm implements INodeType {
 			// Dynamic loading for Open Alerts
 			async getOpenAlerts(this: ILoadOptionsFunctions) {
 				try {
-					const { dattoRmmApiRequest } = await import('./helpers/api.helper');
-					const response = await dattoRmmApiRequest.call(
+					const { dattoRmmApiRequestAllItems } = await import('./helpers/api.helper');
+					const alerts = await dattoRmmApiRequestAllItems.call(
 						this,
 						'GET',
 						'/api/v2/account/alerts/open',
 					);
-
-					if (response?.data && Array.isArray(response.data)) {
-						return response.data.map((alert: any) => ({
-							name: `${alert.alertType || 'Alert'} - ${alert.deviceName || alert.uid} (${alert.priority || 'Normal'})`,
-							value: alert.uid,
-						}));
-					}
-					return [];
+					return alerts.map((alert: any) => ({
+						name: `${alert.alertType || 'Alert'} - ${alert.deviceName || alert.uid} (${alert.priority || 'Normal'})`,
+						value: alert.uid,
+					}));
 				} catch (error) {
 					console.error('Error loading alerts:', error.message);
 					return [];
@@ -199,16 +191,16 @@ export class DattoRmm implements INodeType {
 			// Dynamic loading for Devices
 			async getDevices(this: ILoadOptionsFunctions) {
 				try {
-					const { dattoRmmApiRequest } = await import('./helpers/api.helper');
-					const response = await dattoRmmApiRequest.call(this, 'GET', '/api/v2/account/devices');
-
-					if (response?.data && Array.isArray(response.data)) {
-						return response.data.map((device: any) => ({
-							name: `${device.hostname || device.displayName || 'Unknown'} - ${device.deviceType || 'Device'} (${device.uid})`,
-							value: device.uid,
-						}));
-					}
-					return [];
+					const { dattoRmmApiRequestAllItems } = await import('./helpers/api.helper');
+					const devices = await dattoRmmApiRequestAllItems.call(
+						this,
+						'GET',
+						'/api/v2/account/devices',
+					);
+					return devices.map((device: any) => ({
+						name: `${device.hostname || device.displayName || 'Unknown'} - ${device.deviceType || 'Device'} (${device.intIpAddress || 'No IP'})`,
+						value: device.uid,
+					}));
 				} catch (error) {
 					console.error('Error loading devices:', error.message);
 					return [];
@@ -224,7 +216,8 @@ export class DattoRmm implements INodeType {
 						name: `${job.name} (${job.status})`,
 						value: job.uid,
 					}));
-				} catch {
+				} catch (error) {
+					console.error('Error loading jobs:', error.message);
 					return [];
 				}
 			},
