@@ -178,12 +178,163 @@ export async function executeAuditOperation(
 						}
 						break;
 
+					case 'runSiteAudit':
+						{
+							const siteUid = this.getNodeParameter('siteUid', i) as string;
+							const auditType = this.getNodeParameter('siteAuditType', i, 'device') as string;
+							const includeArchived = this.getNodeParameter('includeArchived', i, false) as boolean;
+							const deviceFilters = this.getNodeParameter('deviceFilters', i, {}) as any;
+							const executionOptions = this.getNodeParameter('executionOptions', i, {}) as any;
+
+							// Extract execution options with defaults
+							const continueOnError = executionOptions.continueOnError ?? true;
+							const maxConcurrent = Math.min(Math.max(executionOptions.maxConcurrent ?? 5, 1), 10);
+							const includeSummary = executionOptions.includeSummary ?? true;
+
+							// Get all devices in the site
+							const siteDevicesResponse = await dattoRmmApiRequest.call(
+								this,
+								'GET',
+								`/api/v2/site/${siteUid}/devices`,
+							);
+
+							let devices = siteDevicesResponse?.data || [];
+							if (!Array.isArray(devices) || devices.length === 0) {
+								throw new NodeOperationError(
+									this.getNode(),
+									`No devices found in site ${siteUid}`,
+									{ itemIndex: i },
+								);
+							}
+
+							// Apply device filters if provided
+							if (deviceFilters.deviceTypes && deviceFilters.deviceTypes.length > 0) {
+								devices = devices.filter((device: any) =>
+									deviceFilters.deviceTypes.includes(device.deviceType?.toLowerCase()),
+								);
+							}
+
+							if (deviceFilters.operatingSystems && deviceFilters.operatingSystems.length > 0) {
+								devices = devices.filter((device: any) => {
+									const osName = device.operatingSystem?.toLowerCase() || '';
+									return deviceFilters.operatingSystems.some((os: string) =>
+										osName.includes(os.toLowerCase()),
+									);
+								});
+							}
+
+							if (deviceFilters.onlineStatus && deviceFilters.onlineStatus !== 'all') {
+								const isOnlineFilter = deviceFilters.onlineStatus === 'online';
+								devices = devices.filter(
+									(device: any) => Boolean(device.online) === isOnlineFilter,
+								);
+							}
+
+							if (devices.length === 0) {
+								throw new NodeOperationError(
+									this.getNode(),
+									'No devices match the specified filters in the selected site',
+									{ itemIndex: i },
+								);
+							}
+
+							// Prepare audit results
+							const auditResults: any[] = [];
+							const errors: any[] = [];
+
+							// Process devices in batches for concurrent execution
+							for (let batchStart = 0; batchStart < devices.length; batchStart += maxConcurrent) {
+								const batch = devices.slice(batchStart, batchStart + maxConcurrent);
+								const batchPromises = batch.map(async (device: any) => {
+									try {
+										const queryParams: Record<string, string | boolean> = {};
+										if (includeArchived) {
+											queryParams.includeArchived = true;
+										}
+
+										// Build endpoint based on audit type
+										let endpoint = `/api/v2/audit/device/${device.uid}`;
+										if (auditType !== 'device') {
+											endpoint += `/${auditType}`;
+										}
+
+										const deviceAuditData = await dattoRmmApiRequest.call(
+											this,
+											'GET',
+											endpoint,
+											{},
+											queryParams,
+										);
+
+										return {
+											success: true,
+											deviceUid: device.uid,
+											deviceName: device.hostname || device.displayName || device.uid,
+											auditType,
+											auditData: deviceAuditData,
+										};
+									} catch (error) {
+										const errorInfo = {
+											success: false,
+											deviceUid: device.uid,
+											deviceName: device.hostname || device.displayName || device.uid,
+											auditType,
+											error: error.message || 'Unknown error occurred',
+										};
+
+										if (!continueOnError) {
+											throw new NodeOperationError(
+												this.getNode(),
+												`Audit failed for device ${device.hostname || device.uid}: ${error.message}`,
+												{ itemIndex: i },
+											);
+										}
+
+										return errorInfo;
+									}
+								});
+
+								// Wait for current batch to complete
+								const batchResults = await Promise.all(batchPromises);
+								batchResults.forEach((result) => {
+									if (result.success) {
+										auditResults.push(result);
+									} else {
+										errors.push(result);
+									}
+								});
+							}
+
+							// Build response data
+							const summaryData = {
+								siteUid,
+								auditType,
+								totalDevices: devices.length,
+								successfulAudits: auditResults.length,
+								failedAudits: errors.length,
+								executionOptions: {
+									continueOnError,
+									maxConcurrent,
+									includeArchived,
+								},
+								timestamp: new Date().toISOString(),
+							};
+
+							// Prepare response based on includeSummary option
+							responseData = {
+								auditResults,
+								errors: errors.length > 0 ? errors : undefined,
+								summary: includeSummary ? summaryData : undefined,
+							};
+						}
+						break;
+
 					default:
 						throw new NodeOperationError(
 							this.getNode(),
 							`The operation "${operation}" is not supported for audit resource`,
 							{
-								description: `Available operations: getDeviceAudit, getSoftwareAudit, getHardwareAudit, getPrinterAudit, getEsxiAudit, getAuditByMac`,
+								description: `Available operations: getDeviceAudit, getSoftwareAudit, getHardwareAudit, getPrinterAudit, getEsxiAudit, getAuditByMac, runSiteAudit`,
 							},
 						);
 				}
@@ -198,6 +349,43 @@ export async function executeAuditOperation(
 						});
 					});
 				} else if (responseData && typeof responseData === 'object') {
+					// Handle special case for runSiteAudit operation
+					if (operation === 'runSiteAudit' && responseData.auditResults) {
+						// Process each audit result from the site audit
+						responseData.auditResults.forEach((auditResult: any) => {
+							returnData.push({
+								json: auditResult,
+								pairedItem: { item: i },
+							});
+						});
+
+						// Add error results if any exist
+						if (
+							responseData.errors &&
+							Array.isArray(responseData.errors) &&
+							responseData.errors.length > 0
+						) {
+							responseData.errors.forEach((errorResult: any) => {
+								returnData.push({
+									json: errorResult,
+									pairedItem: { item: i },
+								});
+							});
+						}
+
+						// Add summary as the last item if included
+						if (responseData.summary) {
+							returnData.push({
+								json: {
+									...responseData.summary,
+									itemType: 'site-audit-summary',
+								},
+								pairedItem: { item: i },
+							});
+						}
+						continue;
+					}
+
 					// Handle different response structures
 					let dataArray: any[] = [];
 

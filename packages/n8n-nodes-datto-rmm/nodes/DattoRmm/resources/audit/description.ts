@@ -48,6 +48,12 @@ export const auditFields: INodeProperties[] = [
 				description: 'Get audit data using MAC address',
 				action: 'Get audit by MAC',
 			},
+			{
+				name: 'Run Site Audit',
+				value: 'runSiteAudit',
+				description: 'Run audit on all devices in a site',
+				action: 'Run audit on all site devices',
+			},
 		],
 		default: 'getDeviceAudit',
 	},
@@ -75,6 +81,169 @@ export const auditFields: INodeProperties[] = [
 		},
 		default: '',
 		description: 'Select the device to retrieve audit information for',
+	},
+
+	// Site UID parameter (for runSiteAudit operation)
+	{
+		displayName: 'Site',
+		name: 'siteUid',
+		type: 'options',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['audit'],
+				operation: ['runSiteAudit'],
+			},
+		},
+		typeOptions: {
+			loadOptionsMethod: 'getSites',
+		},
+		default: '',
+		description: 'Select the site where audit should be run on all devices',
+	},
+
+	// Audit type for runSiteAudit operation
+	{
+		displayName: 'Audit Type',
+		name: 'siteAuditType',
+		type: 'options',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['audit'],
+				operation: ['runSiteAudit'],
+			},
+		},
+		options: [
+			{
+				name: 'Device Audit',
+				value: 'device',
+				description: 'Complete device audit information for all devices',
+			},
+			{
+				name: 'Software Audit',
+				value: 'software',
+				description: 'Software inventory audit for all devices',
+			},
+			{
+				name: 'Hardware Audit',
+				value: 'hardware',
+				description: 'Hardware configuration audit for all devices',
+			},
+		],
+		default: 'device',
+		description: 'Type of audit to perform on all site devices',
+	},
+
+	// Device filtering options for runSiteAudit
+	{
+		displayName: 'Device Filters',
+		name: 'deviceFilters',
+		type: 'collection',
+		placeholder: 'Add Filter',
+		default: {},
+		displayOptions: {
+			show: {
+				resource: ['audit'],
+				operation: ['runSiteAudit'],
+			},
+		},
+		options: [
+			{
+				displayName: 'Device Types',
+				name: 'deviceTypes',
+				type: 'multiOptions',
+				options: [
+					{ name: 'Workstation', value: 'workstation' },
+					{ name: 'Server', value: 'server' },
+					{ name: 'Laptop', value: 'laptop' },
+					{ name: 'Network Device', value: 'network_device' },
+					{ name: 'Virtual Machine', value: 'virtual_machine' },
+				],
+				default: [],
+				description: 'Filter devices by type',
+			},
+			{
+				displayName: 'Operating Systems',
+				name: 'operatingSystems',
+				type: 'multiOptions',
+				options: [
+					{ name: 'Windows', value: 'windows' },
+					{ name: 'macOS', value: 'macos' },
+					{ name: 'Linux', value: 'linux' },
+					{ name: 'Other', value: 'other' },
+				],
+				default: [],
+				description: 'Filter devices by operating system',
+			},
+			{
+				displayName: 'Online Status',
+				name: 'onlineStatus',
+				type: 'options',
+				options: [
+					{ name: 'All Devices', value: 'all' },
+					{ name: 'Online Only', value: 'online' },
+					{ name: 'Offline Only', value: 'offline' },
+				],
+				default: 'all',
+				description: 'Filter devices by online status',
+			},
+		],
+		description: 'Optional filters to apply when selecting devices for audit',
+	},
+
+	// Execution options for runSiteAudit
+	{
+		displayName: 'Execution Options',
+		name: 'executionOptions',
+		type: 'collection',
+		placeholder: 'Add Option',
+		default: {},
+		displayOptions: {
+			show: {
+				resource: ['audit'],
+				operation: ['runSiteAudit'],
+			},
+		},
+		options: [
+			{
+				displayName: 'Continue on Device Error',
+				name: 'continueOnError',
+				type: 'boolean',
+				default: true,
+				description: 'Whether to continue auditing other devices if one device fails',
+			},
+			{
+				displayName: 'Max Concurrent Audits',
+				name: 'maxConcurrent',
+				type: 'number',
+				default: 5,
+				description: 'Maximum number of concurrent device audits (1-10)',
+			},
+			{
+				displayName: 'Include Device Summary',
+				name: 'includeSummary',
+				type: 'boolean',
+				default: true,
+				description: 'Whether to include a summary of the site audit execution',
+			},
+		],
+		description: 'Configure how the site audit should be executed',
+	},
+
+	// Include archived data option for runSiteAudit
+	{
+		displayName: 'Include Archived Data',
+		name: 'includeArchived',
+		type: 'boolean',
+		default: false,
+		displayOptions: {
+			show: {
+				resource: ['audit'],
+				operation: ['runSiteAudit'],
+			},
+		},
+		description: 'Whether to include archived/historical audit data for all devices',
 	},
 
 	// MAC Address parameter (for MAC-based lookup)

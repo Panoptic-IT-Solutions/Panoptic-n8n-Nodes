@@ -128,6 +128,13 @@ export async function executeAccountOperation(
 				}
 			}
 
+			// Apply field selection if configured
+			const resourceMapper = this.getNodeParameter('resourceMapper', 0, {}) as any;
+			if (resourceMapper && resourceMapper.value) {
+				const { applyFieldSelection } = await import('../../helpers/deviceFilter');
+				allDevices = applyFieldSelection(allDevices, resourceMapper);
+			}
+
 			// Return all found devices
 			if (allDevices.length > 0) {
 				allDevices.forEach((device: any) => {
@@ -297,6 +304,13 @@ export async function executeAccountOperation(
 								if (validatedConditions.length > 0) {
 									allDevices = applyAdvancedFilters(allDevices, validatedConditions, filterLogic);
 								}
+							}
+
+							// Apply field selection if configured
+							const resourceMapper = this.getNodeParameter('resourceMapper', itemIndex, {}) as any;
+							if (resourceMapper && resourceMapper.value) {
+								const { applyFieldSelection } = await import('../../helpers/deviceFilter');
+								allDevices = applyFieldSelection(allDevices, resourceMapper);
 							}
 
 							responseData = { devices: allDevices };

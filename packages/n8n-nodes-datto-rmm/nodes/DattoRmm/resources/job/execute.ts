@@ -37,64 +37,37 @@ export async function executeJobOperation(
 					case 'getResults':
 						{
 							const jobUid = this.getNodeParameter('jobUid', i) as string;
-							const deviceUid = this.getNodeParameter('deviceUid', i, '') as string;
-							const retrieveAll = this.getNodeParameter('retrieveAll', i, true) as boolean;
-							const includeOutput = this.getNodeParameter('includeOutput', i, true) as boolean;
+							const deviceUid = this.getNodeParameter('deviceUid', i) as string;
 
-							const queryParams: Record<string, string | number | boolean> = {};
-
-							// Add device filter if specified
-							if (deviceUid?.trim()) {
-								queryParams.deviceUid = deviceUid.trim();
-							}
-
-							// Add output inclusion flag
-							if (includeOutput !== undefined) {
-								queryParams.includeOutput = includeOutput;
-							}
-
-							let endpoint = `/api/v2/job/${jobUid}/results`;
-
-							if (retrieveAll) {
-								// Use automatic pagination to get all results
-								const allResults = await dattoRmmApiRequestAllItems.call(
-									this,
-									'GET',
-									endpoint,
-									{},
-									queryParams,
-								);
-								responseData = { results: allResults };
-							} else {
-								// Use manual pagination
-								const page = this.getNodeParameter('page', i, 1) as number;
-								const max = this.getNodeParameter('max', i, 100) as number;
-								queryParams.page = page;
-								queryParams.max = max;
-
-								responseData = await dattoRmmApiRequest.call(
-									this,
-									'GET',
-									endpoint,
-									{},
-									queryParams,
+							// Validate required deviceUid parameter
+							if (!deviceUid?.trim()) {
+								throw new NodeOperationError(
+									this.getNode(),
+									'Device UID is required for getting job results',
+									{ itemIndex: i },
 								);
 							}
+
+							const endpoint = `/api/v2/job/${jobUid}/results/${deviceUid.trim()}`;
+							responseData = await dattoRmmApiRequest.call(this, 'GET', endpoint);
 						}
 						break;
 
 					case 'getStdOut':
 						{
 							const jobUid = this.getNodeParameter('jobUid', i) as string;
-							const deviceUid = this.getNodeParameter('deviceUid', i, '') as string;
+							const deviceUid = this.getNodeParameter('deviceUid', i) as string;
 
-							let endpoint = `/api/v2/job/${jobUid}/stdout`;
-
-							// If device UID is specified, get output for specific device
-							if (deviceUid?.trim()) {
-								endpoint = `/api/v2/job/${jobUid}/device/${deviceUid.trim()}/stdout`;
+							// Validate required deviceUid parameter
+							if (!deviceUid?.trim()) {
+								throw new NodeOperationError(
+									this.getNode(),
+									'Device UID is required for getting job standard output',
+									{ itemIndex: i },
+								);
 							}
 
+							const endpoint = `/api/v2/job/${jobUid}/results/${deviceUid.trim()}/stdout`;
 							responseData = await dattoRmmApiRequest.call(this, 'GET', endpoint);
 						}
 						break;
@@ -102,15 +75,18 @@ export async function executeJobOperation(
 					case 'getStdErr':
 						{
 							const jobUid = this.getNodeParameter('jobUid', i) as string;
-							const deviceUid = this.getNodeParameter('deviceUid', i, '') as string;
+							const deviceUid = this.getNodeParameter('deviceUid', i) as string;
 
-							let endpoint = `/api/v2/job/${jobUid}/stderr`;
-
-							// If device UID is specified, get error output for specific device
-							if (deviceUid?.trim()) {
-								endpoint = `/api/v2/job/${jobUid}/device/${deviceUid.trim()}/stderr`;
+							// Validate required deviceUid parameter
+							if (!deviceUid?.trim()) {
+								throw new NodeOperationError(
+									this.getNode(),
+									'Device UID is required for getting job standard error',
+									{ itemIndex: i },
+								);
 							}
 
+							const endpoint = `/api/v2/job/${jobUid}/results/${deviceUid.trim()}/stderr`;
 							responseData = await dattoRmmApiRequest.call(this, 'GET', endpoint);
 						}
 						break;
@@ -164,95 +140,181 @@ export async function executeJobOperation(
 						}
 						break;
 
-					case 'getBulkResults':
+					case 'runOnSite':
 						{
-							const jobUids = this.getNodeParameter('jobUids', i) as string[];
-							const retrieveAll = this.getNodeParameter('retrieveAll', i, true) as boolean;
-							const status = this.getNodeParameter('status', i, '') as string;
-							const includeOutput = this.getNodeParameter('includeOutput', i, true) as boolean;
+							const siteUid = this.getNodeParameter('siteUid', i) as string;
+							const componentUid = this.getNodeParameter('componentUid', i) as string;
+							const jobName = this.getNodeParameter('jobName', i) as string;
+							const deviceFilters = this.getNodeParameter('deviceFilters', i, {}) as any;
+							const executionOptions = this.getNodeParameter('executionOptions', i, {}) as any;
 
-							// Validate that job UIDs were selected
-							if (!Array.isArray(jobUids) || jobUids.length === 0) {
+							// Validate required parameters
+							if (!siteUid?.trim()) {
 								throw new NodeOperationError(
 									this.getNode(),
-									'At least one Job must be selected for bulk results',
+									'Site UID is required for running jobs on site',
+									{ itemIndex: i },
+								);
+							}
+							if (!componentUid?.trim()) {
+								throw new NodeOperationError(
+									this.getNode(),
+									'Component UID is required for running jobs on site',
 									{ itemIndex: i },
 								);
 							}
 
-							const allResults: any[] = [];
+							// Get execution options with defaults
+							const batchSize = executionOptions.batchSize || 10;
+							const continueOnFail = executionOptions.continueOnFail !== false; // Default true
+							const includeSkipped = executionOptions.includeSkipped === true; // Default false
 
-							// Process each job UID and collect results
-							for (const jobUid of jobUids) {
-								try {
-									const queryParams: Record<string, string | number | boolean> = {};
+							// Get device filters with defaults
+							const operatingSystem = deviceFilters.operatingSystem || '';
+							const deviceType = deviceFilters.deviceType || '';
+							const onlineOnly = deviceFilters.onlineOnly !== false; // Default true
 
-									if (status?.trim()) {
-										queryParams.status = status.trim();
-									}
-									if (includeOutput !== undefined) {
-										queryParams.includeOutput = includeOutput;
-									}
+							try {
+								// Get all devices for the site
+								const siteDevicesResponse = await dattoRmmApiRequest.call(
+									this,
+									'GET',
+									`/api/v2/site/${siteUid}/devices`,
+								);
 
-									if (retrieveAll) {
-										// Use automatic pagination to get all results for this job
-										const jobResults = await dattoRmmApiRequestAllItems.call(
-											this,
-											'GET',
-											`/api/v2/job/${jobUid}/results`,
-											{},
-											queryParams,
-										);
+								let devices = siteDevicesResponse.data || [];
 
-										// Add job context to each result
-										jobResults.forEach((result: any) => {
-											allResults.push({
-												...result,
-												jobUid: jobUid,
+								// Apply filters
+								if (operatingSystem) {
+									devices = devices.filter((device: any) =>
+										device.operatingSystem?.toLowerCase().includes(operatingSystem.toLowerCase()),
+									);
+								}
+
+								if (deviceType) {
+									devices = devices.filter((device: any) => device.deviceType === deviceType);
+								}
+
+								if (onlineOnly) {
+									devices = devices.filter(
+										(device: any) => device.status === 'online' || device.online === true,
+									);
+								}
+
+								const totalDevices = devices.length;
+								const results: any[] = [];
+								const errors: any[] = [];
+								const skipped: any[] = [];
+
+								if (totalDevices === 0) {
+									responseData = {
+										summary: {
+											totalDevices: 0,
+											processed: 0,
+											successful: 0,
+											failed: 0,
+											skipped: 0,
+											siteName: siteUid,
+											jobName: jobName,
+											componentUid: componentUid,
+										},
+										message: 'No devices found matching the specified criteria',
+										results: [],
+										errors: [],
+										skipped: includeSkipped ? [] : undefined,
+									};
+									break;
+								}
+
+								// Process devices in batches
+								for (let batchStart = 0; batchStart < devices.length; batchStart += batchSize) {
+									const batchDevices = devices.slice(batchStart, batchStart + batchSize);
+
+									for (const device of batchDevices) {
+										try {
+											const jobBody = {
+												jobName: `${jobName} - ${device.hostname || device.displayName || device.uid}`,
+												jobComponent: {
+													componentUid,
+													variables: [], // Could be extended to support job variables
+												},
+											};
+
+											const jobResult = await dattoRmmApiRequest.call(
+												this,
+												'PUT',
+												`/api/v2/device/${device.uid}/quickjob`,
+												jobBody,
+											);
+
+											results.push({
+												deviceUid: device.uid,
+												deviceName: device.hostname || device.displayName || device.uid,
+												deviceType: device.deviceType || 'Unknown',
+												operatingSystem: device.operatingSystem || 'Unknown',
+												status: 'success',
+												jobResponse: jobResult,
 											});
-										});
-									} else {
-										// Use manual pagination
-										const page = this.getNodeParameter('page', i, 1) as number;
-										const max = this.getNodeParameter('max', i, 100) as number;
-										queryParams.page = page;
-										queryParams.max = max;
+										} catch (error: any) {
+											const errorInfo = {
+												deviceUid: device.uid,
+												deviceName: device.hostname || device.displayName || device.uid,
+												deviceType: device.deviceType || 'Unknown',
+												operatingSystem: device.operatingSystem || 'Unknown',
+												status: 'error',
+												error: error.message || 'Unknown error occurred',
+												statusCode: error.statusCode || 0,
+											};
 
-										const jobResultsResponse = await dattoRmmApiRequest.call(
-											this,
-											'GET',
-											`/api/v2/job/${jobUid}/results`,
-											{},
-											queryParams,
-										);
+											errors.push(errorInfo);
 
-										const jobResults = jobResultsResponse.results || [];
-										jobResults.forEach((result: any) => {
-											allResults.push({
-												...result,
-												jobUid: jobUid,
-											});
-										});
+											if (!continueOnFail) {
+												throw new NodeOperationError(
+													this.getNode(),
+													`Job execution failed on device ${device.hostname || device.uid}: ${error.message}`,
+													{ itemIndex: i },
+												);
+											}
+										}
 									}
-								} catch (error) {
-									// If continueOnFail is enabled, add error info and continue
-									if (this.continueOnFail()) {
-										allResults.push({
-											error: error.message,
-											jobUid: jobUid,
-											failed: true,
-										});
-									} else {
-										throw error;
+
+									// Add a small delay between batches to avoid overwhelming the API
+									if (batchStart + batchSize < devices.length) {
+										await new Promise((resolve) => setTimeout(resolve, 1000));
 									}
 								}
-							}
 
-							responseData = {
-								bulkResults: allResults,
-								processedJobs: jobUids,
-								totalResults: allResults.length,
-							};
+								// Prepare summary response
+								responseData = {
+									summary: {
+										totalDevices: totalDevices,
+										processed: results.length + errors.length,
+										successful: results.length,
+										failed: errors.length,
+										skipped: skipped.length,
+										siteName: siteUid,
+										jobName: jobName,
+										componentUid: componentUid,
+										filters: {
+											operatingSystem: operatingSystem || null,
+											deviceType: deviceType || null,
+											onlineOnly: onlineOnly,
+										},
+									},
+									results: results,
+									errors: errors.length > 0 ? errors : undefined,
+									skipped: includeSkipped && skipped.length > 0 ? skipped : undefined,
+								};
+							} catch (error: any) {
+								if (error.statusCode === 404) {
+									throw new NodeOperationError(
+										this.getNode(),
+										`Site with UID "${siteUid}" was not found`,
+										{ itemIndex: i },
+									);
+								}
+								throw error;
+							}
 						}
 						break;
 
@@ -261,7 +323,7 @@ export async function executeJobOperation(
 							this.getNode(),
 							`The operation "${operation}" is not supported for job resource`,
 							{
-								description: `Available operations: get, getComponents, getResults, getStdOut, getStdErr, getHistory, getBulkResults`,
+								description: `Available operations: get, getComponents, getResults, getStdOut, getStdErr, getHistory, runOnSite`,
 							},
 						);
 				}
@@ -286,9 +348,60 @@ export async function executeJobOperation(
 						case 'getHistory':
 							dataArray = responseData.history || [];
 							break;
-						case 'getBulkResults':
-							dataArray = responseData.bulkResults || [];
-							break;
+						case 'runOnSite':
+							// Handle runOnSite operation - return summary and individual device results
+							// Add the summary as the first item
+							returnData.push({
+								json: {
+									...responseData.summary,
+									operation: 'runOnSite',
+									type: 'summary',
+								},
+								pairedItem: { item: i },
+							});
+
+							// Add each successful device result
+							if (responseData.results && responseData.results.length > 0) {
+								responseData.results.forEach((result: any) => {
+									returnData.push({
+										json: {
+											...result,
+											type: 'device_result',
+											operation: 'runOnSite',
+										},
+										pairedItem: { item: i },
+									});
+								});
+							}
+
+							// Add error results if any
+							if (responseData.errors && responseData.errors.length > 0) {
+								responseData.errors.forEach((error: any) => {
+									returnData.push({
+										json: {
+											...error,
+											type: 'device_error',
+											operation: 'runOnSite',
+										},
+										pairedItem: { item: i },
+									});
+								});
+							}
+
+							// Add skipped devices if included
+							if (responseData.skipped && responseData.skipped.length > 0) {
+								responseData.skipped.forEach((skippedDevice: any) => {
+									returnData.push({
+										json: {
+											...skippedDevice,
+											type: 'device_skipped',
+											operation: 'runOnSite',
+										},
+										pairedItem: { item: i },
+									});
+								});
+							}
+							continue; // Skip the normal array processing
 						default:
 							// Handle single object responses or structured data
 							if (responseData.data && Array.isArray(responseData.data)) {
@@ -318,7 +431,6 @@ export async function executeJobOperation(
 								message: `No data found for ${operation}`,
 								pageDetails: responseData.pageDetails || null,
 								operation: operation,
-								jobContext: operation === 'getBulkResults' ? responseData.processedJobs : undefined,
 							},
 							pairedItem: { item: i },
 						});

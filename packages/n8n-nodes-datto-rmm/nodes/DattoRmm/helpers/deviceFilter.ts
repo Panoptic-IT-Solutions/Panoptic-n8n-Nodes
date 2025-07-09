@@ -151,3 +151,53 @@ export function validateFilterConditions(conditions: any[]): FilterCondition[] {
 			booleanValue: condition.booleanValue,
 		}));
 }
+
+/**
+ * Apply field selection to filter only requested fields from devices
+ */
+export function applyFieldSelection(devices: any[], resourceMapper: any): any[] {
+	if (!resourceMapper || !resourceMapper.value || !Array.isArray(resourceMapper.value)) {
+		// No field selection configured, return all fields
+		return devices;
+	}
+
+	const selectedFields = resourceMapper.value.map((field: any) => field.id);
+
+	if (selectedFields.length === 0) {
+		// No fields selected, return all fields
+		return devices;
+	}
+
+	// Filter each device to only include selected fields
+	return devices.map((device) => {
+		const filteredDevice: any = {};
+
+		selectedFields.forEach((fieldPath: string) => {
+			const value = getNestedValue(device, fieldPath);
+			if (value !== undefined) {
+				setNestedValue(filteredDevice, fieldPath, value);
+			}
+		});
+
+		return filteredDevice;
+	});
+}
+
+/**
+ * Set nested property value in object using dot notation
+ */
+function setNestedValue(obj: any, path: string, value: any): void {
+	const keys = path.split('.');
+	const lastKey = keys.pop()!;
+
+	// Create nested structure if it doesn't exist
+	let current = obj;
+	for (const key of keys) {
+		if (current[key] === undefined) {
+			current[key] = {};
+		}
+		current = current[key];
+	}
+
+	current[lastKey] = value;
+}

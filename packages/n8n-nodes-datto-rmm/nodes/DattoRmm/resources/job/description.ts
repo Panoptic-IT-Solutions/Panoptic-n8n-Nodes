@@ -49,10 +49,10 @@ export const jobFields: INodeProperties[] = [
 				action: 'Get job history',
 			},
 			{
-				name: 'Get Bulk Results',
-				value: 'getBulkResults',
-				description: 'Process multiple job results efficiently',
-				action: 'Get bulk job results',
+				name: 'Run on Site',
+				value: 'runOnSite',
+				description: 'Execute a quick job on all devices in a site',
+				action: 'Run job on all site devices',
 			},
 		],
 		default: 'get',
@@ -77,11 +77,167 @@ export const jobFields: INodeProperties[] = [
 		description: 'Select the job from the list of available jobs',
 	},
 
-	// Device UID parameter (for device-specific results)
+	// Site UID parameter (required for runOnSite operation)
 	{
-		displayName: 'Device (Optional)',
+		displayName: 'Site',
+		name: 'siteUid',
+		type: 'options',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['job'],
+				operation: ['runOnSite'],
+			},
+		},
+		typeOptions: {
+			loadOptionsMethod: 'getSites',
+		},
+		default: '',
+		description: 'Select the site where the job should be executed on all devices',
+	},
+
+	// Component UID parameter (required for runOnSite operation)
+	{
+		displayName: 'Component',
+		name: 'componentUid',
+		type: 'options',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['job'],
+				operation: ['runOnSite'],
+			},
+		},
+		typeOptions: {
+			loadOptionsMethod: 'getComponents',
+		},
+		default: '',
+		description: 'Select the component/script to execute on all devices in the site',
+	},
+
+	// Job name for runOnSite operation
+	{
+		displayName: 'Job Name',
+		name: 'jobName',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['job'],
+				operation: ['runOnSite'],
+			},
+		},
+		default: 'Site-wide Job Execution',
+		description: 'Name for the job execution (will be applied to all devices)',
+	},
+
+	// Device filtering options for runOnSite
+	{
+		displayName: 'Device Filters',
+		name: 'deviceFilters',
+		type: 'collection',
+		placeholder: 'Add Filter',
+		displayOptions: {
+			show: {
+				resource: ['job'],
+				operation: ['runOnSite'],
+			},
+		},
+		default: {},
+		options: [
+			{
+				displayName: 'Operating System',
+				name: 'operatingSystem',
+				type: 'string',
+				default: '',
+				placeholder: 'e.g., Windows, Linux',
+				description: 'Filter devices by operating system',
+			},
+			{
+				displayName: 'Device Type',
+				name: 'deviceType',
+				type: 'options',
+				options: [
+					{
+						name: 'All',
+						value: '',
+					},
+					{
+						name: 'Workstation',
+						value: 'Workstation',
+					},
+					{
+						name: 'Server',
+						value: 'Server',
+					},
+					{
+						name: 'Laptop',
+						value: 'Laptop',
+					},
+				],
+				default: '',
+				description: 'Filter devices by type',
+			},
+			{
+				displayName: 'Online Only',
+				name: 'onlineOnly',
+				type: 'boolean',
+				default: true,
+				description: 'Only execute job on devices that are currently online',
+			},
+		],
+		description: 'Optional filters to apply when selecting devices for job execution',
+	},
+
+	// Execution options for runOnSite
+	{
+		displayName: 'Execution Options',
+		name: 'executionOptions',
+		type: 'collection',
+		placeholder: 'Add Option',
+		displayOptions: {
+			show: {
+				resource: ['job'],
+				operation: ['runOnSite'],
+			},
+		},
+		default: {},
+		options: [
+			{
+				displayName: 'Batch Size',
+				name: 'batchSize',
+				type: 'number',
+				default: 10,
+				typeOptions: {
+					minValue: 1,
+					maxValue: 50,
+				},
+				description: 'Number of devices to process in each batch (recommended: 10-25)',
+			},
+			{
+				displayName: 'Continue on Device Failure',
+				name: 'continueOnFail',
+				type: 'boolean',
+				default: true,
+				description: 'Continue executing on other devices if one device fails',
+			},
+			{
+				displayName: 'Include Offline Devices in Results',
+				name: 'includeSkipped',
+				type: 'boolean',
+				default: false,
+				description: 'Include skipped devices (offline/filtered) in the results',
+			},
+		],
+		description: 'Options for controlling job execution behavior',
+	},
+
+	// Device UID parameter (required for device-specific results)
+	{
+		displayName: 'Device',
 		name: 'deviceUid',
 		type: 'options',
+		required: true,
 		displayOptions: {
 			show: {
 				resource: ['job'],
@@ -92,26 +248,7 @@ export const jobFields: INodeProperties[] = [
 			loadOptionsMethod: 'getDevices',
 		},
 		default: '',
-		description: 'Select a specific device (leave empty for all devices)',
-	},
-
-	// Multiple Job UIDs for bulk operations
-	{
-		displayName: 'Jobs (Multi-Select)',
-		name: 'jobUids',
-		type: 'multiOptions',
-		required: true,
-		displayOptions: {
-			show: {
-				resource: ['job'],
-				operation: ['getBulkResults'],
-			},
-		},
-		typeOptions: {
-			loadOptionsMethod: 'getJobs',
-		},
-		default: [],
-		description: 'Select multiple jobs for bulk processing from the list of available jobs',
+		description: 'Select the device for which to retrieve job results',
 	},
 
 	// Retrieve All option for list operations
@@ -123,7 +260,7 @@ export const jobFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['job'],
-				operation: ['getResults', 'getHistory', 'getBulkResults'],
+				operation: ['getResults', 'getHistory'],
 			},
 		},
 		description:
@@ -139,7 +276,7 @@ export const jobFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['job'],
-				operation: ['getResults', 'getHistory', 'getBulkResults'],
+				operation: ['getResults', 'getHistory'],
 				retrieveAll: [false],
 			},
 		},
@@ -153,7 +290,7 @@ export const jobFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['job'],
-				operation: ['getResults', 'getHistory', 'getBulkResults'],
+				operation: ['getResults', 'getHistory'],
 				retrieveAll: [false],
 			},
 		},
@@ -196,7 +333,7 @@ export const jobFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['job'],
-				operation: ['getHistory', 'getBulkResults'],
+				operation: ['getHistory'],
 			},
 		},
 		options: [
@@ -239,7 +376,7 @@ export const jobFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['job'],
-				operation: ['getResults', 'getBulkResults'],
+				operation: ['getResults'],
 			},
 		},
 		description: 'Whether to include stdout/stderr in the results (may increase response size)',
@@ -258,7 +395,7 @@ export const jobFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['job'],
-				operation: ['get', 'getResults', 'getHistory', 'getBulkResults'],
+				operation: ['get', 'getResults', 'getHistory'],
 			},
 		},
 		typeOptions: {
