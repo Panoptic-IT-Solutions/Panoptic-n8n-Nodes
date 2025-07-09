@@ -1,6 +1,6 @@
 import type { IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { dattoRmmApiRequest } from '../../helpers/api.helper';
+import { dattoRmmApiRequest, dattoRmmApiRequestAllItems } from '../../helpers/api.helper';
 import { handleErrors } from '../../helpers/errorHandler';
 
 export async function executeAuditOperation(
@@ -191,18 +191,17 @@ export async function executeAuditOperation(
 							const maxConcurrent = Math.min(Math.max(executionOptions.maxConcurrent ?? 5, 1), 10);
 							const includeSummary = executionOptions.includeSummary ?? true;
 
-							// Get all devices in the site
-							const siteDevicesResponse = await dattoRmmApiRequest.call(
+							// Get all devices in the site (using pagination to get complete list)
+							let devices = await dattoRmmApiRequestAllItems.call(
 								this,
 								'GET',
 								`/api/v2/site/${siteUid}/devices`,
 							);
 
-							let devices = siteDevicesResponse?.data || [];
 							if (!Array.isArray(devices) || devices.length === 0) {
 								throw new NodeOperationError(
 									this.getNode(),
-									`No devices found in site ${siteUid}`,
+									`No devices found in site ${siteUid}. The site may be empty or the site UID may be invalid.`,
 									{ itemIndex: i },
 								);
 							}
