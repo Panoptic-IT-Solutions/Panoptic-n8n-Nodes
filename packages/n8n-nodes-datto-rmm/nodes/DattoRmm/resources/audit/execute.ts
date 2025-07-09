@@ -115,7 +115,7 @@ export async function executeAuditOperation(
 							responseData = await dattoRmmApiRequest.call(
 								this,
 								'GET',
-								`/api/v2/audit/device/${deviceUid}/hardware`,
+								`/api/v2/audit/device/${deviceUid}`,
 								{},
 								queryParams,
 							);
@@ -129,7 +129,7 @@ export async function executeAuditOperation(
 							responseData = await dattoRmmApiRequest.call(
 								this,
 								'GET',
-								`/api/v2/audit/device/${deviceUid}/printer`,
+								`/api/v2/audit/printer/${deviceUid}`,
 							);
 						}
 						break;
@@ -141,7 +141,7 @@ export async function executeAuditOperation(
 							responseData = await dattoRmmApiRequest.call(
 								this,
 								'GET',
-								`/api/v2/audit/device/${deviceUid}/esxi`,
+								`/api/v2/audit/esxihost/${deviceUid}`,
 							);
 						}
 						break;
@@ -149,7 +149,6 @@ export async function executeAuditOperation(
 					case 'getAuditByMac':
 						{
 							const macAddress = this.getNodeParameter('macAddress', i) as string;
-							const auditType = this.getNodeParameter('auditType', i, 'device') as string;
 							const includeArchived = this.getNodeParameter('includeArchived', i, false) as boolean;
 
 							// Validate MAC address format (12 characters, no separators)
@@ -168,11 +167,8 @@ export async function executeAuditOperation(
 								queryParams.includeArchived = true;
 							}
 
-							// Build endpoint based on audit type
-							let endpoint = `/api/v2/audit/mac/${cleanMac}`;
-							if (auditType !== 'device') {
-								endpoint += `/${auditType}`;
-							}
+							// Build endpoint based on audit type - only device audit is available for MAC address
+							const endpoint = `/api/v2/audit/device/macAddress/${cleanMac}`;
 
 							responseData = await dattoRmmApiRequest.call(this, 'GET', endpoint, {}, queryParams);
 						}
