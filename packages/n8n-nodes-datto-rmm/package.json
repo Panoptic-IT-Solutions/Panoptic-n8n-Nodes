@@ -1,6 +1,6 @@
 {
 	"name": "@panoptic-it-solutions/n8n-nodes-datto-rmm",
-	"version": "0.6.1",
+	"version": "0.6.2",
 	"description": "n8n node for Datto RMM integration",
 	"keywords": [
 		"n8n-community-node-package",
