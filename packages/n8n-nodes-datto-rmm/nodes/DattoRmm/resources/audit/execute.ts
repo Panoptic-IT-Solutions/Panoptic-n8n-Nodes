@@ -248,9 +248,17 @@ export async function executeAuditOperation(
 										}
 
 										// Build endpoint based on audit type
-										let endpoint = `/api/v2/audit/device/${device.uid}`;
-										if (auditType !== 'device') {
-											endpoint += `/${auditType}`;
+										let endpoint;
+										switch (auditType) {
+											case 'device':
+											case 'hardware':
+												endpoint = `/api/v2/audit/device/${device.uid}`;
+												break;
+											case 'software':
+												endpoint = `/api/v2/audit/device/${device.uid}/software`;
+												break;
+											default:
+												throw new Error(`Unsupported audit type: ${auditType}`);
 										}
 
 										const deviceAuditData = await dattoRmmApiRequest.call(
