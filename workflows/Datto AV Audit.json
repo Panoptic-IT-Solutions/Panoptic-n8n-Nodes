@@ -1,0 +1,4161 @@
+{
+  "name": "Datto AV Audit",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "43f15e9a-d52c-4194-9731-96171e37a205",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "getDevices",
+        "useAdvancedFilters": true,
+        "filterConditions": {
+          "condition": [
+            {
+              "field": "antivirus.antivirusProduct",
+              "operator": "notEquals",
+              "value": "Datto AV"
+            },
+            {
+              "field": "siteName",
+              "operator": "notEquals",
+              "value": "Limerick Diocesan Office"
+            },
+            {
+              "field": "siteName",
+              "operator": "notEquals",
+              "value": "Corcorans Furniture"
+            },
+            {
+              "field": "siteName",
+              "operator": "notEquals",
+              "value": "Crawford Art Gallery"
+            },
+            {
+              "field": "siteName",
+              "operator": "notEquals",
+              "value": "Kilkenny College"
+            }
+          ]
+        },
+        "resourceMapper": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@panoptic-it-solutions/n8n-nodes-datto-rmm.dattoRmm",
+      "typeVersion": 1,
+      "position": [
+        440,
+        0
+      ],
+      "id": "8abc605f-5936-4b7b-a7b4-21b1d0f9b0d8",
+      "name": "Get all account devices",
+      "credentials": {
+        "dattoRmmApi": {
+          "id": "1kIgTcSpphFhRmw9",
+          "name": "Datto RMM account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = Date.now();\nconst days30 = 30 * 24 * 60 * 60 * 1000;\n\nconst siteMap = {};\n\nfor (const item of items) {\n    const device = item.json;\n\n    if (!device.lastSeen || (now - device.lastSeen > days30)) {\n        continue;\n    }\n\n    if (!siteMap[device.siteName]) {\n        siteMap[device.siteName] = {};\n    }\n\n    const lastSeenInDays = Math.round((now - device.lastSeen) / (1000 * 60 * 60 * 24));\n    const lastAuditInDays = device.lastAuditDate\n        ? Math.round((now - device.lastAuditDate) / (1000 * 60 * 60 * 24))\n        : null;\n\n    siteMap[device.siteName][device.hostname] = {\n        description: device.description,\n        lastSeenInDays,\n        lastAuditInDays,\n        lastLoggedInUser: device.lastLoggedInUser,\n        antivirusProduct: device.antivirus?.antivirusProduct || null,\n        portalUrl: device.portalUrl\n    };\n}\n\n// Now turn siteMap into an array of objects for n8n\nconst output = Object.keys(siteMap).map(siteName => ({\n    json: {\n        siteName,\n        devices: siteMap[siteName]\n    }\n}));\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "id": "d31c21d3-a63d-43e6-bc3a-b031fcb6e249",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "resource": "searchFilter",
+        "filter": {
+          "group": [
+            {
+              "items": {
+                "itemType": [
+                  {
+                    "field": "companyName",
+                    "op": "contains",
+                    "value": "={{ $json.siteName }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-autotask.autotask",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -220
+      ],
+      "id": "01eb40ef-6fce-432b-a01e-c3acaa71c635",
+      "name": "Build a search filter",
+      "credentials": {
+        "autotaskApi": {
+          "id": "eeU5PmJhYjQG7Do5",
+          "name": "Autotask account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "company",
+        "operation": "getManyAdvanced",
+        "maxRecords": 50,
+        "advancedFilter": "={\"filter\":[{\"op\":\"contains\",\"field\":\"companyName\",\"value\":\"{{ $json.siteName }}\"}]} ",
+        "selectColumns": [
+          "companyName",
+          "id"
+        ]
+      },
+      "type": "n8n-nodes-autotask.autotask",
+      "typeVersion": 1,
+      "position": [
+        1020,
+        0
+      ],
+      "id": "20411b96-90c5-4009-b6e5-68c0a4194e46",
+      "name": "Get multiple entities using advanced filters",
+      "credentials": {
+        "autotaskApi": {
+          "id": "eeU5PmJhYjQG7Do5",
+          "name": "Autotask account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "ticket",
+        "operation": "create",
+        "fieldsToMap": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "companyID": "={{ $json.id }}",
+            "priority": "3",
+            "status": "1",
+            "description": "=WRONG ANTIVIRUS INSTALLED: ANTIVIRUS COMPLIANCE REPORT\n\nORGANISATION: {{ $json.companyName }}\n\n---\nSTATUS SUMMARY\n---\nTotal devices in this site not compliant: {{ (Object.keys($('Code').all(json.devices)).length) }}\n\n---\nDEVICE DETAILS\n---\n{{#each $json.devices as |device hostname|}}\nHostname: {{hostname}}\nDescription: {{device.description}}\nLast Seen: {{device.lastSeenInDays}} days ago\nLast Audit: {{device.lastAuditInDays}}\nLast Logged In User: {{device.lastLoggedInUser}}\nOperating System: {{device.operatingSystem}}\nExternal IP: {{device.extIpAddress}}\nAntivirus Installed: {{device.antivirusProduct}}\nExpected: Datto AV\nRMM Link: {{device.portalUrl}}\n\n---\n{{/each}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "assignedResourceID",
+              "displayName": "Assigned resource ID (Reference: Resource | assignedResourceID)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "API User",
+                  "value": "29682890",
+                  "description": ""
+                },
+                {
+                  "name": "Appypie API User",
+                  "value": "29682901",
+                  "description": ""
+                },
+                {
+                  "name": "AT Functions",
+                  "value": "29682918",
+                  "description": ""
+                },
+                {
+                  "name": "audIT API",
+                  "value": "29682916",
+                  "description": ""
+                },
+                {
+                  "name": "Autotask Administrator",
+                  "value": "4",
+                  "description": ""
+                },
+                {
+                  "name": "Autotask Search API",
+                  "value": "29682937",
+                  "description": ""
+                },
+                {
+                  "name": "Autotask Unifi API User",
+                  "value": "29682922",
+                  "description": ""
+                },
+                {
+                  "name": "Axl Arceo",
+                  "value": "29682908",
+                  "description": ""
+                },
+                {
+                  "name": "BCDR DATTO",
+                  "value": "29682910",
+                  "description": ""
+                },
+                {
+                  "name": "Calendar Sync API",
+                  "value": "29682896",
+                  "description": ""
+                },
+                {
+                  "name": "Chris Sutton",
+                  "value": "29682887",
+                  "description": ""
+                },
+                {
+                  "name": "Dark WebID",
+                  "value": "29682929",
+                  "description": ""
+                },
+                {
+                  "name": "Datto BCDR",
+                  "value": "29682909",
+                  "description": ""
+                },
+                {
+                  "name": "Datto File Protection",
+                  "value": "29682912",
+                  "description": ""
+                },
+                {
+                  "name": "Datto FP",
+                  "value": "29682899",
+                  "description": ""
+                },
+                {
+                  "name": "Datto RMM",
+                  "value": "29682898",
+                  "description": ""
+                },
+                {
+                  "name": "David Griffith",
+                  "value": "29682885",
+                  "description": ""
+                },
+                {
+                  "name": "Donnacha API",
+                  "value": "29682924",
+                  "description": ""
+                },
+                {
+                  "name": "Donnacha Gutteridge",
+                  "value": "29682923",
+                  "description": ""
+                },
+                {
+                  "name": "Edward Abbott",
+                  "value": "29682917",
+                  "description": ""
+                },
+                {
+                  "name": "Enriko Joeleht",
+                  "value": "29682915",
+                  "description": ""
+                },
+                {
+                  "name": "Francis Bautista",
+                  "value": "29682897",
+                  "description": ""
+                },
+                {
+                  "name": "ITGlue Integration",
+                  "value": "29682911",
+                  "description": ""
+                },
+                {
+                  "name": "Jennifer Murphy",
+                  "value": "29682920",
+                  "description": ""
+                },
+                {
+                  "name": "MRR Tracker Dashboard",
+                  "value": "29682933",
+                  "description": ""
+                },
+                {
+                  "name": "myIT Process",
+                  "value": "29682930",
+                  "description": ""
+                },
+                {
+                  "name": "n8n automation",
+                  "value": "29682932",
+                  "description": ""
+                },
+                {
+                  "name": "n8n CS",
+                  "value": "29682939",
+                  "description": ""
+                },
+                {
+                  "name": "n8n webhook",
+                  "value": "29682931",
+                  "description": ""
+                },
+                {
+                  "name": "Nuacom API User",
+                  "value": "29682907",
+                  "description": ""
+                },
+                {
+                  "name": "Ovi Indrei",
+                  "value": "29682893",
+                  "description": ""
+                },
+                {
+                  "name": "Panoptic Website",
+                  "value": "29682905",
+                  "description": ""
+                },
+                {
+                  "name": "Pauline Nyhan",
+                  "value": "29682888",
+                  "description": ""
+                },
+                {
+                  "name": "PHP Autotask",
+                  "value": "29682919",
+                  "description": ""
+                },
+                {
+                  "name": "Quickbooks User",
+                  "value": "29682894",
+                  "description": ""
+                },
+                {
+                  "name": "Rocket Cyber",
+                  "value": "29682913",
+                  "description": ""
+                },
+                {
+                  "name": "Rudolph Vasconcelos",
+                  "value": "29682895",
+                  "description": ""
+                },
+                {
+                  "name": "SaaS Alerts",
+                  "value": "29682934",
+                  "description": ""
+                },
+                {
+                  "name": "SaaS Backup",
+                  "value": "29682925",
+                  "description": ""
+                },
+                {
+                  "name": "Sinead Horgan Griffith",
+                  "value": "29682892",
+                  "description": ""
+                },
+                {
+                  "name": "Support Bot Triage",
+                  "value": "29682928",
+                  "description": ""
+                },
+                {
+                  "name": "Tanel Tamm",
+                  "value": "29682891",
+                  "description": ""
+                },
+                {
+                  "name": "Triage Agent",
+                  "value": "29682936",
+                  "description": ""
+                },
+                {
+                  "name": "Triage Assistant Bot",
+                  "value": "29682935",
+                  "description": ""
+                },
+                {
+                  "name": "Vulscan Integration",
+                  "value": "29682921",
+                  "description": ""
+                },
+                {
+                  "name": "Zapier Integration",
+                  "value": "29682926",
+                  "description": ""
+                },
+                {
+                  "name": "Zapier Webhook",
+                  "value": "29682927",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "assignedResourceRoleID",
+              "displayName": "Assigned resource role ID (Integer | assignedResourceRoleID)",
+              "type": "number",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "billingCodeID",
+              "displayName": "Billing code ID (Reference: BillingCode | billingCodeID)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "1Password (29683563)",
+                  "value": "29683563",
+                  "description": ""
+                },
+                {
+                  "name": "Administration (29683521)",
+                  "value": "29683521",
+                  "description": ""
+                },
+                {
+                  "name": "Adobe (29683562)",
+                  "value": "29683562",
+                  "description": ""
+                },
+                {
+                  "name": "Airline Tickets (29683358)",
+                  "value": "29683358",
+                  "description": ""
+                },
+                {
+                  "name": "Alert Management (29683572)",
+                  "value": "29683572",
+                  "description": ""
+                },
+                {
+                  "name": "Annual Labour Charge (ORR) (29683581)",
+                  "value": "29683581",
+                  "description": ""
+                },
+                {
+                  "name": "Bank/Public Holiday (91208)",
+                  "value": "91208",
+                  "description": ""
+                },
+                {
+                  "name": "BCDR & NAS Services (29683506)",
+                  "value": "29683506",
+                  "description": ""
+                },
+                {
+                  "name": "Bereavement (29683490)",
+                  "value": "29683490",
+                  "description": ""
+                },
+                {
+                  "name": "Block Purchase (29683360)",
+                  "value": "29683360",
+                  "description": ""
+                },
+                {
+                  "name": "BNI Related (29683535)",
+                  "value": "29683535",
+                  "description": ""
+                },
+                {
+                  "name": "Breakfast (29683481)",
+                  "value": "29683481",
+                  "description": ""
+                },
+                {
+                  "name": "Broadband Services (29683550)",
+                  "value": "29683550",
+                  "description": ""
+                },
+                {
+                  "name": "BullphishID (29683570)",
+                  "value": "29683570",
+                  "description": ""
+                },
+                {
+                  "name": "Change Orders (5)",
+                  "value": "5",
+                  "description": ""
+                },
+                {
+                  "name": "Clean Install (O/S, Drivers, Updates) [Fixed Price] (29683530)",
+                  "value": "29683530",
+                  "description": ""
+                },
+                {
+                  "name": "Consulting (29683574)",
+                  "value": "29683574",
+                  "description": ""
+                },
+                {
+                  "name": "Crashplan (29683566)",
+                  "value": "29683566",
+                  "description": ""
+                },
+                {
+                  "name": "Data Backup (more than 10gb) [Fixed Price] (29683531)",
+                  "value": "29683531",
+                  "description": ""
+                },
+                {
+                  "name": "Data Backup (up to 10gb) [Fixed Price] (29683509)",
+                  "value": "29683509",
+                  "description": ""
+                },
+                {
+                  "name": "Datto Cloud Continuity (29683567)",
+                  "value": "29683567",
+                  "description": ""
+                },
+                {
+                  "name": "Datto EDR (29683569)",
+                  "value": "29683569",
+                  "description": ""
+                },
+                {
+                  "name": "Datto File Protection (29683565)",
+                  "value": "29683565",
+                  "description": ""
+                },
+                {
+                  "name": "Datto Saas Protection & SaaS Defence (29683559)",
+                  "value": "29683559",
+                  "description": ""
+                },
+                {
+                  "name": "Discount (-1)",
+                  "value": "-1",
+                  "description": ""
+                },
+                {
+                  "name": "Discount Non-Taxable (-2)",
+                  "value": "-2",
+                  "description": ""
+                },
+                {
+                  "name": "Emergency/After Hours Support (29682802)",
+                  "value": "29682802",
+                  "description": ""
+                },
+                {
+                  "name": "Entertainment Expense (3)",
+                  "value": "3",
+                  "description": ""
+                },
+                {
+                  "name": "ESET Security Products (29683511)",
+                  "value": "29683511",
+                  "description": ""
+                },
+                {
+                  "name": "External Meeting (29683520)",
+                  "value": "29683520",
+                  "description": ""
+                },
+                {
+                  "name": "Fixed Price Labour (29683513)",
+                  "value": "29683513",
+                  "description": ""
+                },
+                {
+                  "name": "Fixed Price Service (29683527)",
+                  "value": "29683527",
+                  "description": ""
+                },
+                {
+                  "name": "Fuel (29683479)",
+                  "value": "29683479",
+                  "description": ""
+                },
+                {
+                  "name": "General Administration (29682808)",
+                  "value": "29682808",
+                  "description": ""
+                },
+                {
+                  "name": "Google Workspace (29683558)",
+                  "value": "29683558",
+                  "description": ""
+                },
+                {
+                  "name": "Hard Disk Cloning [Fixed Price] (29683495)",
+                  "value": "29683495",
+                  "description": ""
+                },
+                {
+                  "name": "Hardware (29682871)",
+                  "value": "29682871",
+                  "description": ""
+                },
+                {
+                  "name": "Hardware (RCT) (29683554)",
+                  "value": "29683554",
+                  "description": ""
+                },
+                {
+                  "name": "Hardware Repairs (29683507)",
+                  "value": "29683507",
+                  "description": ""
+                },
+                {
+                  "name": "Hardware Tests [Fixed Price] (29683496)",
+                  "value": "29683496",
+                  "description": ""
+                },
+                {
+                  "name": "Hotel (29683357)",
+                  "value": "29683357",
+                  "description": ""
+                },
+                {
+                  "name": "HR/Recruiting (29682781)",
+                  "value": "29682781",
+                  "description": ""
+                },
+                {
+                  "name": "Initial Assessment [Fixed Price] (29683533)",
+                  "value": "29683533",
+                  "description": ""
+                },
+                {
+                  "name": "Initial Device Setup [Fixed Price] (29683540)",
+                  "value": "29683540",
+                  "description": ""
+                },
+                {
+                  "name": "Internal Administration (29683501)",
+                  "value": "29683501",
+                  "description": ""
+                },
+                {
+                  "name": "Internal Maintenance (29683525)",
+                  "value": "29683525",
+                  "description": ""
+                },
+                {
+                  "name": "Internal Meeting (29682779)",
+                  "value": "29682779",
+                  "description": ""
+                },
+                {
+                  "name": "JAMF (29683561)",
+                  "value": "29683561",
+                  "description": ""
+                },
+                {
+                  "name": "Jumpcloud (29683560)",
+                  "value": "29683560",
+                  "description": ""
+                },
+                {
+                  "name": "Jury Duty (29683489)",
+                  "value": "29683489",
+                  "description": ""
+                },
+                {
+                  "name": "Labor (29682918)",
+                  "value": "29682918",
+                  "description": ""
+                },
+                {
+                  "name": "Labour - RCT No VAT (29683555)",
+                  "value": "29683555",
+                  "description": ""
+                },
+                {
+                  "name": "Labour Adjustment (29683510)",
+                  "value": "29683510",
+                  "description": ""
+                },
+                {
+                  "name": "Maintenance (29682804)",
+                  "value": "29682804",
+                  "description": ""
+                },
+                {
+                  "name": "Managed Services (User) MRR (29683579)",
+                  "value": "29683579",
+                  "description": ""
+                },
+                {
+                  "name": "Managed Services (User) ORR (29683576)",
+                  "value": "29683576",
+                  "description": ""
+                },
+                {
+                  "name": "Managed Services & Support (Device) MRR (29682901)",
+                  "value": "29682901",
+                  "description": ""
+                },
+                {
+                  "name": "Management Tasks (29683526)",
+                  "value": "29683526",
+                  "description": ""
+                },
+                {
+                  "name": "Microsoft 365 (29683557)",
+                  "value": "29683557",
+                  "description": ""
+                },
+                {
+                  "name": "Microsoft Azure Cloud Services (29683568)",
+                  "value": "29683568",
+                  "description": ""
+                },
+                {
+                  "name": "Mileage (Rate 1) (2)",
+                  "value": "2",
+                  "description": ""
+                },
+                {
+                  "name": "Mileage (Rate 2) (29683537)",
+                  "value": "29683537",
+                  "description": ""
+                },
+                {
+                  "name": "Mileage (Rate 3) (29683538)",
+                  "value": "29683538",
+                  "description": ""
+                },
+                {
+                  "name": "Mileage (Rate 4) (29683549)",
+                  "value": "29683549",
+                  "description": ""
+                },
+                {
+                  "name": "Milestone (29682913)",
+                  "value": "29682913",
+                  "description": ""
+                },
+                {
+                  "name": "Miscellaneous (29682783)",
+                  "value": "29682783",
+                  "description": ""
+                },
+                {
+                  "name": "Monitoring Services (29683277)",
+                  "value": "29683277",
+                  "description": ""
+                },
+                {
+                  "name": "Non Billable Work (29682861)",
+                  "value": "29682861",
+                  "description": ""
+                },
+                {
+                  "name": "Non-Taxable Products (29682839)",
+                  "value": "29682839",
+                  "description": ""
+                },
+                {
+                  "name": "Office Management (29682780)",
+                  "value": "29682780",
+                  "description": ""
+                },
+                {
+                  "name": "Onsite Labour (29682800)",
+                  "value": "29682800",
+                  "description": ""
+                },
+                {
+                  "name": "Out Of Pocket Expense (29683573)",
+                  "value": "29683573",
+                  "description": ""
+                },
+                {
+                  "name": "Overnight Subsistence (100km+ from Office) (29683548)",
+                  "value": "29683548",
+                  "description": ""
+                },
+                {
+                  "name": "Parking (29683485)",
+                  "value": "29683485",
+                  "description": ""
+                },
+                {
+                  "name": "Penetration Testing (29683580)",
+                  "value": "29683580",
+                  "description": ""
+                },
+                {
+                  "name": "Project Development Work (29683577)",
+                  "value": "29683577",
+                  "description": ""
+                },
+                {
+                  "name": "Project Management (29683542)",
+                  "value": "29683542",
+                  "description": ""
+                },
+                {
+                  "name": "Project Management (29683553)",
+                  "value": "29683553",
+                  "description": ""
+                },
+                {
+                  "name": "Projects (29682915)",
+                  "value": "29682915",
+                  "description": ""
+                },
+                {
+                  "name": "Purchasing (29683541)",
+                  "value": "29683541",
+                  "description": ""
+                },
+                {
+                  "name": "Quotes (Domestic) (29683529)",
+                  "value": "29683529",
+                  "description": ""
+                },
+                {
+                  "name": "Quotes/Proposals (Business/Project) (29683528)",
+                  "value": "29683528",
+                  "description": ""
+                },
+                {
+                  "name": "Recurring Services (29682912)",
+                  "value": "29682912",
+                  "description": ""
+                },
+                {
+                  "name": "Remote Support (29682801)",
+                  "value": "29682801",
+                  "description": ""
+                },
+                {
+                  "name": "Reporting (29683575)",
+                  "value": "29683575",
+                  "description": ""
+                },
+                {
+                  "name": "Research (29683312)",
+                  "value": "29683312",
+                  "description": ""
+                },
+                {
+                  "name": "Retainer Purchase (29683361)",
+                  "value": "29683361",
+                  "description": ""
+                },
+                {
+                  "name": "Reviewing System Alerts (29683522)",
+                  "value": "29683522",
+                  "description": ""
+                },
+                {
+                  "name": "RMA (29683551)",
+                  "value": "29683551",
+                  "description": ""
+                },
+                {
+                  "name": "Sales (29682860)",
+                  "value": "29682860",
+                  "description": ""
+                },
+                {
+                  "name": "Sales (29683543)",
+                  "value": "29683543",
+                  "description": ""
+                },
+                {
+                  "name": "Sales Commission (29683547)",
+                  "value": "29683547",
+                  "description": ""
+                },
+                {
+                  "name": "Sales Invoicing (29683523)",
+                  "value": "29683523",
+                  "description": ""
+                },
+                {
+                  "name": "Service Administration (29683571)",
+                  "value": "29683571",
+                  "description": ""
+                },
+                {
+                  "name": "Shipping (29683374)",
+                  "value": "29683374",
+                  "description": ""
+                },
+                {
+                  "name": "Software (29682872)",
+                  "value": "29682872",
+                  "description": ""
+                },
+                {
+                  "name": "Software as a Service (29683278)",
+                  "value": "29683278",
+                  "description": ""
+                },
+                {
+                  "name": "Subscription (29682919)",
+                  "value": "29682919",
+                  "description": ""
+                },
+                {
+                  "name": "Subsistence 5-10 hours away (10km+ from Office) (29683482)",
+                  "value": "29683482",
+                  "description": ""
+                },
+                {
+                  "name": "Subsistence more than 10 Hours away (10km+ from Office) (29683483)",
+                  "value": "29683483",
+                  "description": ""
+                },
+                {
+                  "name": "Systems Administration (29683536)",
+                  "value": "29683536",
+                  "description": ""
+                },
+                {
+                  "name": "Tasks (29682916)",
+                  "value": "29682916",
+                  "description": ""
+                },
+                {
+                  "name": "Taxable Products (29682840)",
+                  "value": "29682840",
+                  "description": ""
+                },
+                {
+                  "name": "Taxes from Autotask (29682914)",
+                  "value": "29682914",
+                  "description": ""
+                },
+                {
+                  "name": "Taxi/Bus/Ground Transportation (29683484)",
+                  "value": "29683484",
+                  "description": ""
+                },
+                {
+                  "name": "Ticket Purchase (29683362)",
+                  "value": "29683362",
+                  "description": ""
+                },
+                {
+                  "name": "Tickets (29682917)",
+                  "value": "29682917",
+                  "description": ""
+                },
+                {
+                  "name": "Tolls (29683488)",
+                  "value": "29683488",
+                  "description": ""
+                },
+                {
+                  "name": "Training (29683311)",
+                  "value": "29683311",
+                  "description": ""
+                },
+                {
+                  "name": "Travel Time (27192)",
+                  "value": "27192",
+                  "description": ""
+                },
+                {
+                  "name": "Travel Time (29683504)",
+                  "value": "29683504",
+                  "description": ""
+                },
+                {
+                  "name": "Travel Time 50% (29683578)",
+                  "value": "29683578",
+                  "description": ""
+                },
+                {
+                  "name": "Travel Time To/From Site (29683556)",
+                  "value": "29683556",
+                  "description": ""
+                },
+                {
+                  "name": "Unifi Device Maintenance (29683564)",
+                  "value": "29683564",
+                  "description": ""
+                },
+                {
+                  "name": "Virus/Malware Removal [Fixed Price] (29683532)",
+                  "value": "29683532",
+                  "description": ""
+                },
+                {
+                  "name": "Virus/Malware Scanning [Fixed Price] (29683494)",
+                  "value": "29683494",
+                  "description": ""
+                },
+                {
+                  "name": "VOIP Phone Service (29683515)",
+                  "value": "29683515",
+                  "description": ""
+                },
+                {
+                  "name": "Warranty Repair (29683552)",
+                  "value": "29683552",
+                  "description": ""
+                },
+                {
+                  "name": "Web Development (29683539)",
+                  "value": "29683539",
+                  "description": ""
+                },
+                {
+                  "name": "Web Project Management (29683502)",
+                  "value": "29683502",
+                  "description": ""
+                },
+                {
+                  "name": "Web Services (29683505)",
+                  "value": "29683505",
+                  "description": ""
+                },
+                {
+                  "name": "Web Services (29683534)",
+                  "value": "29683534",
+                  "description": ""
+                },
+                {
+                  "name": "Web Services Admin (29683503)",
+                  "value": "29683503",
+                  "description": ""
+                },
+                {
+                  "name": "Workshop Labour (29683492)",
+                  "value": "29683492",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "changeApprovalBoard",
+              "displayName": "Change approval board (Picklist | changeApprovalBoard)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "changeApprovalStatus",
+              "displayName": "Change approval status (Picklist | changeApprovalStatus)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "Approved",
+                  "value": "5",
+                  "description": ""
+                },
+                {
+                  "name": "Assigned",
+                  "value": "2",
+                  "description": ""
+                },
+                {
+                  "name": "Not Assigned",
+                  "value": "1",
+                  "description": ""
+                },
+                {
+                  "name": "Partially Approved",
+                  "value": "4",
+                  "description": ""
+                },
+                {
+                  "name": "Rejected",
+                  "value": "6",
+                  "description": ""
+                },
+                {
+                  "name": "Requested",
+                  "value": "3",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "changeApprovalType",
+              "displayName": "Change approval type (Picklist | changeApprovalType)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "All approvers must approve",
+                  "value": "1",
+                  "description": ""
+                },
+                {
+                  "name": "One approver must approve",
+                  "value": "2",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "changeInfoField1",
+              "displayName": "Change info field1 (String | changeInfoField1)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "changeInfoField2",
+              "displayName": "Change info field2 (String | changeInfoField2)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "changeInfoField3",
+              "displayName": "Change info field3 (String | changeInfoField3)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "changeInfoField4",
+              "displayName": "Change info field4 (String | changeInfoField4)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "changeInfoField5",
+              "displayName": "Change info field5 (String | changeInfoField5)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "companyID",
+              "displayName": "Company ID (Integer | companyID)",
+              "type": "number",
+              "required": true,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "companyLocationID",
+              "displayName": "Company location ID (Integer | companyLocationID)",
+              "type": "number",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "configurationItemID",
+              "displayName": "Configuration item ID (Integer | configurationItemID)",
+              "type": "number",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "contactID",
+              "displayName": "Contact ID (Integer | contactID)",
+              "type": "number",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "contractID",
+              "displayName": "Contract ID (Integer | contractID)",
+              "type": "number",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "contractServiceBundleID",
+              "displayName": "Contract service bundle ID (Long | contractServiceBundleID)",
+              "type": "number",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "contractServiceID",
+              "displayName": "Contract service ID (Long | contractServiceID)",
+              "type": "number",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "createdByContactID",
+              "displayName": "Created by contact ID (Integer | createdByContactID)",
+              "type": "number",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "description",
+              "displayName": "Description (String | description)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "dueDateTime",
+              "displayName": "Due date time (Datetime | dueDateTime)",
+              "type": "dateTime",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "estimatedHours",
+              "displayName": "Estimated hours (Decimal | estimatedHours)",
+              "type": "number",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "externalID",
+              "displayName": "External ID (String | externalID)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "issueType",
+              "displayName": "Issue type (Picklist | issueType)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "Access Management",
+                  "value": "39",
+                  "description": ""
+                },
+                {
+                  "name": "Automation",
+                  "value": "32",
+                  "description": ""
+                },
+                {
+                  "name": "Break/Fix",
+                  "value": "15",
+                  "description": ""
+                },
+                {
+                  "name": "Cloud Services",
+                  "value": "18",
+                  "description": ""
+                },
+                {
+                  "name": "Cloud/Shared Drive",
+                  "value": "41",
+                  "description": ""
+                },
+                {
+                  "name": "Consulting",
+                  "value": "19",
+                  "description": ""
+                },
+                {
+                  "name": "Daily Service Administration",
+                  "value": "22",
+                  "description": ""
+                },
+                {
+                  "name": "Dark Web Monitoring",
+                  "value": "34",
+                  "description": ""
+                },
+                {
+                  "name": "Datto BCDR Backups",
+                  "value": "24",
+                  "description": ""
+                },
+                {
+                  "name": "Datto Cloud Continuity",
+                  "value": "29",
+                  "description": ""
+                },
+                {
+                  "name": "Datto File Protection",
+                  "value": "26",
+                  "description": ""
+                },
+                {
+                  "name": "Desktop/Laptop",
+                  "value": "38",
+                  "description": ""
+                },
+                {
+                  "name": "Devices",
+                  "value": "31",
+                  "description": ""
+                },
+                {
+                  "name": "Email",
+                  "value": "35",
+                  "description": ""
+                },
+                {
+                  "name": "Endpoint Alerts",
+                  "value": "28",
+                  "description": ""
+                },
+                {
+                  "name": "Internal Tasks",
+                  "value": "6",
+                  "description": ""
+                },
+                {
+                  "name": "Monitoring Alert",
+                  "value": "14",
+                  "description": ""
+                },
+                {
+                  "name": "Network",
+                  "value": "11",
+                  "description": ""
+                },
+                {
+                  "name": "New Setup/Install",
+                  "value": "12",
+                  "description": ""
+                },
+                {
+                  "name": "Onboarding/Offboarding",
+                  "value": "20",
+                  "description": ""
+                },
+                {
+                  "name": "Phone System",
+                  "value": "33",
+                  "description": ""
+                },
+                {
+                  "name": "Printer/Scanner",
+                  "value": "42",
+                  "description": ""
+                },
+                {
+                  "name": "Reporting",
+                  "value": "21",
+                  "description": ""
+                },
+                {
+                  "name": "SaaS Alerts",
+                  "value": "37",
+                  "description": ""
+                },
+                {
+                  "name": "SaaS Defense Alerts",
+                  "value": "27",
+                  "description": ""
+                },
+                {
+                  "name": "SaaS Protection",
+                  "value": "30",
+                  "description": ""
+                },
+                {
+                  "name": "Sales",
+                  "value": "17",
+                  "description": ""
+                },
+                {
+                  "name": "Server",
+                  "value": "7",
+                  "description": ""
+                },
+                {
+                  "name": "Service Administration",
+                  "value": "25",
+                  "description": ""
+                },
+                {
+                  "name": "Software",
+                  "value": "40",
+                  "description": ""
+                },
+                {
+                  "name": "Technology Success",
+                  "value": "43",
+                  "description": ""
+                },
+                {
+                  "name": "Triage",
+                  "value": "16",
+                  "description": ""
+                },
+                {
+                  "name": "Unifi Event",
+                  "value": "23",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "isVisibleToComanaged",
+              "displayName": "Is visible to comanaged (Boolean | isVisibleToComanaged)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "Yes",
+                  "value": "true",
+                  "description": "True/Yes"
+                },
+                {
+                  "name": "No",
+                  "value": "false",
+                  "description": "False/No"
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "monitorID",
+              "displayName": "Monitor ID (Long | monitorID)",
+              "type": "number",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "monitorTypeID",
+              "displayName": "Monitor type ID (Picklist | monitorTypeID)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "AntivirusMonitor",
+                  "value": "23",
+                  "description": ""
+                },
+                {
+                  "name": "BackupMonitor",
+                  "value": "13",
+                  "description": ""
+                },
+                {
+                  "name": "ComponentMonitor",
+                  "value": "4",
+                  "description": ""
+                },
+                {
+                  "name": "CPUMonitor",
+                  "value": "2",
+                  "description": ""
+                },
+                {
+                  "name": "DiskUsageMonitor",
+                  "value": "10",
+                  "description": ""
+                },
+                {
+                  "name": "EventLogMonitor",
+                  "value": "7",
+                  "description": ""
+                },
+                {
+                  "name": "FileFolderSizeMonitor",
+                  "value": "11",
+                  "description": ""
+                },
+                {
+                  "name": "HardwareMonitor",
+                  "value": "19",
+                  "description": ""
+                },
+                {
+                  "name": "MemoryMonitor",
+                  "value": "3",
+                  "description": ""
+                },
+                {
+                  "name": "NetworkMonitor",
+                  "value": "16",
+                  "description": ""
+                },
+                {
+                  "name": "NetworkOfflineMonitor",
+                  "value": "17",
+                  "description": ""
+                },
+                {
+                  "name": "OnlineStatusMonitor",
+                  "value": "1",
+                  "description": ""
+                },
+                {
+                  "name": "PatchMonitor",
+                  "value": "20",
+                  "description": ""
+                },
+                {
+                  "name": "PrinterStatusMonitor",
+                  "value": "14",
+                  "description": ""
+                },
+                {
+                  "name": "ProcessMonitor",
+                  "value": "5",
+                  "description": ""
+                },
+                {
+                  "name": "RansomwareMonitor",
+                  "value": "24",
+                  "description": ""
+                },
+                {
+                  "name": "SecurityCenterMonitor",
+                  "value": "9",
+                  "description": ""
+                },
+                {
+                  "name": "SecurityManagementMonitor",
+                  "value": "12",
+                  "description": ""
+                },
+                {
+                  "name": "ServiceMonitor",
+                  "value": "6",
+                  "description": ""
+                },
+                {
+                  "name": "SnmpMonitor",
+                  "value": "15",
+                  "description": ""
+                },
+                {
+                  "name": "SoftwareMonitor",
+                  "value": "8",
+                  "description": ""
+                },
+                {
+                  "name": "TemperatureSensorMonitor",
+                  "value": "18",
+                  "description": ""
+                },
+                {
+                  "name": "ThreatDetection",
+                  "value": "25",
+                  "description": ""
+                },
+                {
+                  "name": "WindowsPerformanceMonitor",
+                  "value": "21",
+                  "description": ""
+                },
+                {
+                  "name": "WmiMonitor",
+                  "value": "22",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "opportunityID",
+              "displayName": "Opportunity ID (Integer | opportunityID)",
+              "type": "number",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "organizationalLevelAssociationID",
+              "displayName": "Organizational level association ID (Integer | organizationalLevelAssociationID)",
+              "type": "number",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "priority",
+              "displayName": "Priority (Picklist | priority)",
+              "type": "options",
+              "required": true,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "Critical",
+                  "value": "4",
+                  "description": ""
+                },
+                {
+                  "name": "High",
+                  "value": "1",
+                  "description": ""
+                },
+                {
+                  "name": "High (Backup)",
+                  "value": "5",
+                  "description": ""
+                },
+                {
+                  "name": "Installation",
+                  "value": "9",
+                  "description": ""
+                },
+                {
+                  "name": "M/A/Cs < 4 hrs",
+                  "value": "7",
+                  "description": ""
+                },
+                {
+                  "name": "M/A/Cs > 4 hrs",
+                  "value": "8",
+                  "description": ""
+                },
+                {
+                  "name": "Medium",
+                  "value": "2",
+                  "description": ""
+                },
+                {
+                  "name": "On Auto FFup",
+                  "value": "11",
+                  "description": ""
+                },
+                {
+                  "name": "Quick Hit A/Cs < 1hr",
+                  "value": "6",
+                  "description": ""
+                },
+                {
+                  "name": "Resolved",
+                  "value": "10",
+                  "description": ""
+                },
+                {
+                  "name": "Standard",
+                  "value": "3",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "problemTicketId",
+              "displayName": "Problem ticket id (Integer | problemTicketId)",
+              "type": "number",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "projectID",
+              "displayName": "Project ID (Integer | projectID)",
+              "type": "number",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "purchaseOrderNumber",
+              "displayName": "Purchase order number (String | purchaseOrderNumber)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "queueID",
+              "displayName": "Queue ID (Picklist | queueID)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "Administration",
+                  "value": "29683378",
+                  "description": ""
+                },
+                {
+                  "name": "Billing",
+                  "value": "29683484",
+                  "description": ""
+                },
+                {
+                  "name": "Centralized Services",
+                  "value": "29683488",
+                  "description": ""
+                },
+                {
+                  "name": "Client Portal",
+                  "value": "5",
+                  "description": ""
+                },
+                {
+                  "name": "Cloud Services",
+                  "value": "29683479",
+                  "description": ""
+                },
+                {
+                  "name": "Daily Service Administration",
+                  "value": "29683486",
+                  "description": ""
+                },
+                {
+                  "name": "Digital Card Support",
+                  "value": "29683482",
+                  "description": ""
+                },
+                {
+                  "name": "Internal",
+                  "value": "29683489",
+                  "description": ""
+                },
+                {
+                  "name": "Level I Support",
+                  "value": "29682833",
+                  "description": ""
+                },
+                {
+                  "name": "Monitoring Alert",
+                  "value": "8",
+                  "description": ""
+                },
+                {
+                  "name": "Onboarding/Offboarding",
+                  "value": "29683485",
+                  "description": ""
+                },
+                {
+                  "name": "Onsite Installation",
+                  "value": "29683483",
+                  "description": ""
+                },
+                {
+                  "name": "Post Sale",
+                  "value": "6",
+                  "description": ""
+                },
+                {
+                  "name": "Professional Services",
+                  "value": "29683487",
+                  "description": ""
+                },
+                {
+                  "name": "Sales",
+                  "value": "29683480",
+                  "description": ""
+                },
+                {
+                  "name": "Triage",
+                  "value": "29683481",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "resolution",
+              "displayName": "Resolution (String | resolution)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "rmaStatus",
+              "displayName": "Rma status (Picklist | rmaStatus)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "Authorized",
+                  "value": "2",
+                  "description": ""
+                },
+                {
+                  "name": "Denied",
+                  "value": "3",
+                  "description": ""
+                },
+                {
+                  "name": "Finished",
+                  "value": "9",
+                  "description": ""
+                },
+                {
+                  "name": "Finished (Not Returned)",
+                  "value": "10",
+                  "description": ""
+                },
+                {
+                  "name": "In Progress",
+                  "value": "8",
+                  "description": ""
+                },
+                {
+                  "name": "On Hold",
+                  "value": "5",
+                  "description": ""
+                },
+                {
+                  "name": "Open",
+                  "value": "4",
+                  "description": ""
+                },
+                {
+                  "name": "Requested",
+                  "value": "1",
+                  "description": ""
+                },
+                {
+                  "name": "Waiting for Customer",
+                  "value": "7",
+                  "description": ""
+                },
+                {
+                  "name": "Withdrawn",
+                  "value": "6",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "rmaType",
+              "displayName": "Rma type (Picklist | rmaType)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "Repair",
+                  "value": "2",
+                  "description": ""
+                },
+                {
+                  "name": "Replace",
+                  "value": "3",
+                  "description": ""
+                },
+                {
+                  "name": "Return",
+                  "value": "1",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "serviceLevelAgreementID",
+              "displayName": "Service level agreement ID (Picklist | serviceLevelAgreementID)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "General SLA",
+                  "value": "1",
+                  "description": ""
+                },
+                {
+                  "name": "Kilkenny College SLA",
+                  "value": "4",
+                  "description": ""
+                },
+                {
+                  "name": "No SLA Type",
+                  "value": "6",
+                  "description": ""
+                },
+                {
+                  "name": "Onboarding SLA",
+                  "value": "7",
+                  "description": ""
+                },
+                {
+                  "name": "Onsite Job SLA",
+                  "value": "9",
+                  "description": ""
+                },
+                {
+                  "name": "Premium Service SLA",
+                  "value": "3",
+                  "description": ""
+                },
+                {
+                  "name": "Priority Non-Contract SLA",
+                  "value": "5",
+                  "description": ""
+                },
+                {
+                  "name": "Remote Support SLA",
+                  "value": "2",
+                  "description": ""
+                },
+                {
+                  "name": "Sales SLA",
+                  "value": "10",
+                  "description": ""
+                },
+                {
+                  "name": "Workshop SLA",
+                  "value": "8",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "source",
+              "displayName": "Source (Picklist | source)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "Automation Monitoring",
+                  "value": "17",
+                  "description": ""
+                },
+                {
+                  "name": "Client Portal",
+                  "value": "-1",
+                  "description": ""
+                },
+                {
+                  "name": "Email",
+                  "value": "4",
+                  "description": ""
+                },
+                {
+                  "name": "Email - KCK",
+                  "value": "16",
+                  "description": ""
+                },
+                {
+                  "name": "In Person/Onsite",
+                  "value": "6",
+                  "description": ""
+                },
+                {
+                  "name": "Insourced",
+                  "value": "-2",
+                  "description": ""
+                },
+                {
+                  "name": "Monitoring Alert",
+                  "value": "8",
+                  "description": ""
+                },
+                {
+                  "name": "Phone",
+                  "value": "2",
+                  "description": "Default value"
+                },
+                {
+                  "name": "RMM Agent",
+                  "value": "13",
+                  "description": ""
+                },
+                {
+                  "name": "Unifi Controller",
+                  "value": "14",
+                  "description": ""
+                },
+                {
+                  "name": "Verbal",
+                  "value": "11",
+                  "description": ""
+                },
+                {
+                  "name": "Voice Mail",
+                  "value": "1",
+                  "description": ""
+                },
+                {
+                  "name": "Web Portal",
+                  "value": "5",
+                  "description": ""
+                },
+                {
+                  "name": "Website",
+                  "value": "12",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "Status (Picklist | status)",
+              "type": "options",
+              "required": true,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "Assigned to Taskfire",
+                  "value": "33",
+                  "description": ""
+                },
+                {
+                  "name": "Complete",
+                  "value": "5",
+                  "description": ""
+                },
+                {
+                  "name": "Customer Note Added",
+                  "value": "19",
+                  "description": ""
+                },
+                {
+                  "name": "Customer Verification",
+                  "value": "15",
+                  "description": ""
+                },
+                {
+                  "name": "Escalate",
+                  "value": "11",
+                  "description": ""
+                },
+                {
+                  "name": "Escalated by Taskfire",
+                  "value": "35",
+                  "description": ""
+                },
+                {
+                  "name": "For Scheduling",
+                  "value": "27",
+                  "description": ""
+                },
+                {
+                  "name": "In Progress",
+                  "value": "8",
+                  "description": ""
+                },
+                {
+                  "name": "In Progress-Background",
+                  "value": "34",
+                  "description": ""
+                },
+                {
+                  "name": "In Repair",
+                  "value": "36",
+                  "description": ""
+                },
+                {
+                  "name": "Need to Order",
+                  "value": "30",
+                  "description": ""
+                },
+                {
+                  "name": "New",
+                  "value": "1",
+                  "description": "Default value"
+                },
+                {
+                  "name": "On Hold",
+                  "value": "17",
+                  "description": ""
+                },
+                {
+                  "name": "On Loan or Rental",
+                  "value": "24",
+                  "description": ""
+                },
+                {
+                  "name": "Pending Close",
+                  "value": "16",
+                  "description": ""
+                },
+                {
+                  "name": "Pending Review",
+                  "value": "28",
+                  "description": ""
+                },
+                {
+                  "name": "Ready For Collection",
+                  "value": "20",
+                  "description": ""
+                },
+                {
+                  "name": "Ready To Engage",
+                  "value": "26",
+                  "description": ""
+                },
+                {
+                  "name": "Requires Research",
+                  "value": "29",
+                  "description": ""
+                },
+                {
+                  "name": "SC Assist",
+                  "value": "10",
+                  "description": ""
+                },
+                {
+                  "name": "Scheduled - On-Site",
+                  "value": "23",
+                  "description": ""
+                },
+                {
+                  "name": "Scheduled - Remote",
+                  "value": "22",
+                  "description": ""
+                },
+                {
+                  "name": "Scheduled - Workshop",
+                  "value": "32",
+                  "description": ""
+                },
+                {
+                  "name": "To Be Delivered",
+                  "value": "21",
+                  "description": ""
+                },
+                {
+                  "name": "Waiting Approval",
+                  "value": "13",
+                  "description": ""
+                },
+                {
+                  "name": "Waiting Customer",
+                  "value": "7",
+                  "description": ""
+                },
+                {
+                  "name": "Waiting Materials",
+                  "value": "9",
+                  "description": ""
+                },
+                {
+                  "name": "Waiting Third-Party",
+                  "value": "12",
+                  "description": ""
+                },
+                {
+                  "name": "With Review Points",
+                  "value": "31",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "subIssueType",
+              "displayName": "Sub issue type (Picklist | subIssueType)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "2FA",
+                  "value": "357",
+                  "description": ""
+                },
+                {
+                  "name": "2FA Management",
+                  "value": "254",
+                  "description": ""
+                },
+                {
+                  "name": "Access Management",
+                  "value": "253",
+                  "description": ""
+                },
+                {
+                  "name": "Access Point",
+                  "value": "116",
+                  "description": ""
+                },
+                {
+                  "name": "Access Point",
+                  "value": "149",
+                  "description": ""
+                },
+                {
+                  "name": "Access Problems",
+                  "value": "331",
+                  "description": ""
+                },
+                {
+                  "name": "Access Request",
+                  "value": "359",
+                  "description": ""
+                },
+                {
+                  "name": "Access Review",
+                  "value": "367",
+                  "description": ""
+                },
+                {
+                  "name": "Access Revocation",
+                  "value": "368",
+                  "description": ""
+                },
+                {
+                  "name": "Access Security",
+                  "value": "361",
+                  "description": ""
+                },
+                {
+                  "name": "Active Directory",
+                  "value": "213",
+                  "description": ""
+                },
+                {
+                  "name": "Admin Rights",
+                  "value": "360",
+                  "description": ""
+                },
+                {
+                  "name": "Anti Virus",
+                  "value": "214",
+                  "description": ""
+                },
+                {
+                  "name": "Apple TV",
+                  "value": "227",
+                  "description": ""
+                },
+                {
+                  "name": "Application",
+                  "value": "215",
+                  "description": ""
+                },
+                {
+                  "name": "Assessment",
+                  "value": "378",
+                  "description": ""
+                },
+                {
+                  "name": "Assistance",
+                  "value": "366",
+                  "description": ""
+                },
+                {
+                  "name": "Assistance",
+                  "value": "377",
+                  "description": ""
+                },
+                {
+                  "name": "Assistance",
+                  "value": "381",
+                  "description": ""
+                },
+                {
+                  "name": "Automation Scripts",
+                  "value": "321",
+                  "description": ""
+                },
+                {
+                  "name": "AV Migration",
+                  "value": "326",
+                  "description": ""
+                },
+                {
+                  "name": "Backup",
+                  "value": "117",
+                  "description": ""
+                },
+                {
+                  "name": "Backup",
+                  "value": "133",
+                  "description": ""
+                },
+                {
+                  "name": "Backup",
+                  "value": "169",
+                  "description": ""
+                },
+                {
+                  "name": "Backup",
+                  "value": "268",
+                  "description": ""
+                },
+                {
+                  "name": "Backup Restore",
+                  "value": "383",
+                  "description": ""
+                },
+                {
+                  "name": "Backups",
+                  "value": "295",
+                  "description": ""
+                },
+                {
+                  "name": "Battery Replacement",
+                  "value": "382",
+                  "description": ""
+                },
+                {
+                  "name": "Broadband Connection",
+                  "value": "249",
+                  "description": ""
+                },
+                {
+                  "name": "Bullphish Config",
+                  "value": "341",
+                  "description": ""
+                },
+                {
+                  "name": "Cabling",
+                  "value": "184",
+                  "description": ""
+                },
+                {
+                  "name": "Call Quality",
+                  "value": "252",
+                  "description": ""
+                },
+                {
+                  "name": "Client Machine Offboarding",
+                  "value": "316",
+                  "description": ""
+                },
+                {
+                  "name": "Client Offboarding",
+                  "value": "270",
+                  "description": ""
+                },
+                {
+                  "name": "Client Onboarding",
+                  "value": "271",
+                  "description": ""
+                },
+                {
+                  "name": "Client Staff Offboarding",
+                  "value": "315",
+                  "description": ""
+                },
+                {
+                  "name": "Client Staff Onboarding",
+                  "value": "307",
+                  "description": ""
+                },
+                {
+                  "name": "Cloud Continuity Alerts",
+                  "value": "312",
+                  "description": ""
+                },
+                {
+                  "name": "Cloud Continuity Alerts",
+                  "value": "319",
+                  "description": ""
+                },
+                {
+                  "name": "Cloud/Shared Drive Update",
+                  "value": "281",
+                  "description": ""
+                },
+                {
+                  "name": "Cloud/Shared Drives",
+                  "value": "240",
+                  "description": ""
+                },
+                {
+                  "name": "Configuration",
+                  "value": "185",
+                  "description": ""
+                },
+                {
+                  "name": "Configuration",
+                  "value": "340",
+                  "description": ""
+                },
+                {
+                  "name": "Connectivity",
+                  "value": "170",
+                  "description": ""
+                },
+                {
+                  "name": "Connectivity",
+                  "value": "186",
+                  "description": ""
+                },
+                {
+                  "name": "Consultancy",
+                  "value": "248",
+                  "description": ""
+                },
+                {
+                  "name": "Content Trace / Search",
+                  "value": "265",
+                  "description": ""
+                },
+                {
+                  "name": "Contract Renewal",
+                  "value": "298",
+                  "description": ""
+                },
+                {
+                  "name": "Contract Renewal",
+                  "value": "304",
+                  "description": ""
+                },
+                {
+                  "name": "Critical",
+                  "value": "297",
+                  "description": ""
+                },
+                {
+                  "name": "Cyber Incident Response",
+                  "value": "385",
+                  "description": ""
+                },
+                {
+                  "name": "Daily Service Administration",
+                  "value": "285",
+                  "description": ""
+                },
+                {
+                  "name": "Dark Web Monitoring",
+                  "value": "334",
+                  "description": ""
+                },
+                {
+                  "name": "Data Transfer",
+                  "value": "237",
+                  "description": ""
+                },
+                {
+                  "name": "DCC Config",
+                  "value": "342",
+                  "description": ""
+                },
+                {
+                  "name": "Desktop",
+                  "value": "19",
+                  "description": ""
+                },
+                {
+                  "name": "Desktop",
+                  "value": "134",
+                  "description": ""
+                },
+                {
+                  "name": "Desktop",
+                  "value": "183",
+                  "description": ""
+                },
+                {
+                  "name": "Desktop",
+                  "value": "212",
+                  "description": ""
+                },
+                {
+                  "name": "Development",
+                  "value": "129",
+                  "description": ""
+                },
+                {
+                  "name": "Device Disconnection",
+                  "value": "291",
+                  "description": ""
+                },
+                {
+                  "name": "DFP Backups",
+                  "value": "309",
+                  "description": ""
+                },
+                {
+                  "name": "DHCP",
+                  "value": "118",
+                  "description": ""
+                },
+                {
+                  "name": "Digital Card Support",
+                  "value": "247",
+                  "description": ""
+                },
+                {
+                  "name": "Disaster Recovery Check",
+                  "value": "387",
+                  "description": ""
+                },
+                {
+                  "name": "Disk Failure",
+                  "value": "324",
+                  "description": ""
+                },
+                {
+                  "name": "Disk Health",
+                  "value": "323",
+                  "description": ""
+                },
+                {
+                  "name": "Disk Space",
+                  "value": "171",
+                  "description": ""
+                },
+                {
+                  "name": "Disk Usage",
+                  "value": "317",
+                  "description": ""
+                },
+                {
+                  "name": "DNS",
+                  "value": "111",
+                  "description": ""
+                },
+                {
+                  "name": "DNS",
+                  "value": "119",
+                  "description": ""
+                },
+                {
+                  "name": "Documentation",
+                  "value": "370",
+                  "description": ""
+                },
+                {
+                  "name": "Domain Reg / Transfer",
+                  "value": "259",
+                  "description": ""
+                },
+                {
+                  "name": "Drive Access",
+                  "value": "371",
+                  "description": ""
+                },
+                {
+                  "name": "Drive Configuration/Setup",
+                  "value": "374",
+                  "description": ""
+                },
+                {
+                  "name": "Drive Creation/Deletion",
+                  "value": "373",
+                  "description": ""
+                },
+                {
+                  "name": "Drive Mapping",
+                  "value": "372",
+                  "description": ""
+                },
+                {
+                  "name": "E-mail",
+                  "value": "200",
+                  "description": ""
+                },
+                {
+                  "name": "Email Assistance",
+                  "value": "345",
+                  "description": ""
+                },
+                {
+                  "name": "Email Migration",
+                  "value": "233",
+                  "description": ""
+                },
+                {
+                  "name": "Email Migration",
+                  "value": "379",
+                  "description": ""
+                },
+                {
+                  "name": "Email Security",
+                  "value": "346",
+                  "description": ""
+                },
+                {
+                  "name": "Email Setup",
+                  "value": "276",
+                  "description": ""
+                },
+                {
+                  "name": "Employee Offboarding",
+                  "value": "128",
+                  "description": ""
+                },
+                {
+                  "name": "Endpoint",
+                  "value": "362",
+                  "description": ""
+                },
+                {
+                  "name": "Endpoint Alerts",
+                  "value": "311",
+                  "description": ""
+                },
+                {
+                  "name": "Endpoint Alerts",
+                  "value": "318",
+                  "description": ""
+                },
+                {
+                  "name": "ESET/Webroot",
+                  "value": "290",
+                  "description": ""
+                },
+                {
+                  "name": "Exchange",
+                  "value": "216",
+                  "description": ""
+                },
+                {
+                  "name": "Failed Backups",
+                  "value": "294",
+                  "description": ""
+                },
+                {
+                  "name": "File System",
+                  "value": "120",
+                  "description": ""
+                },
+                {
+                  "name": "Firewall",
+                  "value": "136",
+                  "description": ""
+                },
+                {
+                  "name": "Firewall",
+                  "value": "172",
+                  "description": ""
+                },
+                {
+                  "name": "Firewall",
+                  "value": "201",
+                  "description": ""
+                },
+                {
+                  "name": "Firewall",
+                  "value": "219",
+                  "description": ""
+                },
+                {
+                  "name": "Firewall/Router",
+                  "value": "112",
+                  "description": ""
+                },
+                {
+                  "name": "Firmware",
+                  "value": "232",
+                  "description": ""
+                },
+                {
+                  "name": "Graphus Config",
+                  "value": "363",
+                  "description": ""
+                },
+                {
+                  "name": "Graphus Configuration",
+                  "value": "339",
+                  "description": ""
+                },
+                {
+                  "name": "Graphus Monitoring",
+                  "value": "325",
+                  "description": ""
+                },
+                {
+                  "name": "Hard Drive",
+                  "value": "224",
+                  "description": ""
+                },
+                {
+                  "name": "Hardware",
+                  "value": "173",
+                  "description": ""
+                },
+                {
+                  "name": "Hardware",
+                  "value": "217",
+                  "description": ""
+                },
+                {
+                  "name": "Hosting Management",
+                  "value": "286",
+                  "description": ""
+                },
+                {
+                  "name": "Hosting Migration",
+                  "value": "234",
+                  "description": ""
+                },
+                {
+                  "name": "Install",
+                  "value": "364",
+                  "description": ""
+                },
+                {
+                  "name": "Intact Server",
+                  "value": "330",
+                  "description": ""
+                },
+                {
+                  "name": "Internet",
+                  "value": "45",
+                  "description": ""
+                },
+                {
+                  "name": "Internet",
+                  "value": "137",
+                  "description": ""
+                },
+                {
+                  "name": "Internet",
+                  "value": "174",
+                  "description": ""
+                },
+                {
+                  "name": "Internet",
+                  "value": "188",
+                  "description": ""
+                },
+                {
+                  "name": "Internet",
+                  "value": "203",
+                  "description": ""
+                },
+                {
+                  "name": "Internet Security",
+                  "value": "243",
+                  "description": ""
+                },
+                {
+                  "name": "IVR / Queue Changes",
+                  "value": "251",
+                  "description": ""
+                },
+                {
+                  "name": "IVR/Queue Changes",
+                  "value": "376",
+                  "description": ""
+                },
+                {
+                  "name": "JAMF Configuration",
+                  "value": "264",
+                  "description": ""
+                },
+                {
+                  "name": "JumpCloud Configuration",
+                  "value": "263",
+                  "description": ""
+                },
+                {
+                  "name": "Laptop",
+                  "value": "150",
+                  "description": ""
+                },
+                {
+                  "name": "Laptop",
+                  "value": "204",
+                  "description": ""
+                },
+                {
+                  "name": "Laptop",
+                  "value": "222",
+                  "description": ""
+                },
+                {
+                  "name": "Laptop",
+                  "value": "223",
+                  "description": ""
+                },
+                {
+                  "name": "Leave Prep",
+                  "value": "282",
+                  "description": ""
+                },
+                {
+                  "name": "License Management",
+                  "value": "283",
+                  "description": ""
+                },
+                {
+                  "name": "Logon Failure",
+                  "value": "190",
+                  "description": ""
+                },
+                {
+                  "name": "Logs",
+                  "value": "327",
+                  "description": ""
+                },
+                {
+                  "name": "Logs",
+                  "value": "328",
+                  "description": ""
+                },
+                {
+                  "name": "MacPractice",
+                  "value": "353",
+                  "description": ""
+                },
+                {
+                  "name": "Messaging",
+                  "value": "121",
+                  "description": ""
+                },
+                {
+                  "name": "Microsoft Related",
+                  "value": "356",
+                  "description": ""
+                },
+                {
+                  "name": "Monitor",
+                  "value": "235",
+                  "description": ""
+                },
+                {
+                  "name": "MS 365 Licence Management",
+                  "value": "256",
+                  "description": ""
+                },
+                {
+                  "name": "MS 365 Settings Change",
+                  "value": "266",
+                  "description": ""
+                },
+                {
+                  "name": "MS Power Automate",
+                  "value": "308",
+                  "description": ""
+                },
+                {
+                  "name": "Multiple Items",
+                  "value": "352",
+                  "description": ""
+                },
+                {
+                  "name": "Network",
+                  "value": "139",
+                  "description": ""
+                },
+                {
+                  "name": "Network",
+                  "value": "176",
+                  "description": ""
+                },
+                {
+                  "name": "Network",
+                  "value": "205",
+                  "description": ""
+                },
+                {
+                  "name": "Network Printer",
+                  "value": "191",
+                  "description": ""
+                },
+                {
+                  "name": "New Email Account",
+                  "value": "257",
+                  "description": ""
+                },
+                {
+                  "name": "New Email Setup",
+                  "value": "354",
+                  "description": ""
+                },
+                {
+                  "name": "New Employee Onboarding",
+                  "value": "127",
+                  "description": ""
+                },
+                {
+                  "name": "New Hosting Setup",
+                  "value": "258",
+                  "description": ""
+                },
+                {
+                  "name": "New Setup",
+                  "value": "105",
+                  "description": ""
+                },
+                {
+                  "name": "Nuacom Alert",
+                  "value": "336",
+                  "description": ""
+                },
+                {
+                  "name": "Nuacom Outage",
+                  "value": "332",
+                  "description": ""
+                },
+                {
+                  "name": "Nuacom Phone System",
+                  "value": "238",
+                  "description": ""
+                },
+                {
+                  "name": "Nuacom Phone System",
+                  "value": "250",
+                  "description": ""
+                },
+                {
+                  "name": "OneDrive Configuration",
+                  "value": "262",
+                  "description": ""
+                },
+                {
+                  "name": "Operating System",
+                  "value": "153",
+                  "description": ""
+                },
+                {
+                  "name": "OS Updates",
+                  "value": "242",
+                  "description": ""
+                },
+                {
+                  "name": "OS Upgrade",
+                  "value": "350",
+                  "description": ""
+                },
+                {
+                  "name": "Other",
+                  "value": "140",
+                  "description": ""
+                },
+                {
+                  "name": "Other Hardware",
+                  "value": "202",
+                  "description": ""
+                },
+                {
+                  "name": "Out of Office Auto Response",
+                  "value": "338",
+                  "description": ""
+                },
+                {
+                  "name": "Out Of Office VM",
+                  "value": "337",
+                  "description": ""
+                },
+                {
+                  "name": "Password Reset",
+                  "value": "358",
+                  "description": ""
+                },
+                {
+                  "name": "Penetration Tests",
+                  "value": "322",
+                  "description": ""
+                },
+                {
+                  "name": "Performance",
+                  "value": "124",
+                  "description": ""
+                },
+                {
+                  "name": "Performance",
+                  "value": "192",
+                  "description": ""
+                },
+                {
+                  "name": "Periodic Reporting",
+                  "value": "246",
+                  "description": ""
+                },
+                {
+                  "name": "Periodic Reporting",
+                  "value": "280",
+                  "description": ""
+                },
+                {
+                  "name": "Peripherals",
+                  "value": "384",
+                  "description": ""
+                },
+                {
+                  "name": "Phone",
+                  "value": "44",
+                  "description": ""
+                },
+                {
+                  "name": "Phone",
+                  "value": "141",
+                  "description": ""
+                },
+                {
+                  "name": "Phone",
+                  "value": "206",
+                  "description": ""
+                },
+                {
+                  "name": "Phone Assistance",
+                  "value": "351",
+                  "description": ""
+                },
+                {
+                  "name": "Phone Handset",
+                  "value": "162",
+                  "description": ""
+                },
+                {
+                  "name": "Phone Settings",
+                  "value": "343",
+                  "description": ""
+                },
+                {
+                  "name": "PoE Disconnection",
+                  "value": "301",
+                  "description": ""
+                },
+                {
+                  "name": "Power Automate",
+                  "value": "335",
+                  "description": ""
+                },
+                {
+                  "name": "Printer",
+                  "value": "17",
+                  "description": ""
+                },
+                {
+                  "name": "Printer/Scanner",
+                  "value": "143",
+                  "description": ""
+                },
+                {
+                  "name": "Printer/Scanner",
+                  "value": "208",
+                  "description": ""
+                },
+                {
+                  "name": "Process Streamlining",
+                  "value": "369",
+                  "description": ""
+                },
+                {
+                  "name": "Query",
+                  "value": "278",
+                  "description": ""
+                },
+                {
+                  "name": "Quotation",
+                  "value": "221",
+                  "description": ""
+                },
+                {
+                  "name": "RAM Upgrade",
+                  "value": "375",
+                  "description": ""
+                },
+                {
+                  "name": "Remote Access",
+                  "value": "193",
+                  "description": ""
+                },
+                {
+                  "name": "RMM Configuraton",
+                  "value": "303",
+                  "description": ""
+                },
+                {
+                  "name": "Rogue AP",
+                  "value": "300",
+                  "description": ""
+                },
+                {
+                  "name": "Router",
+                  "value": "144",
+                  "description": ""
+                },
+                {
+                  "name": "Router",
+                  "value": "180",
+                  "description": ""
+                },
+                {
+                  "name": "Router",
+                  "value": "209",
+                  "description": ""
+                },
+                {
+                  "name": "SaaS Alerts",
+                  "value": "348",
+                  "description": ""
+                },
+                {
+                  "name": "SaaS Defense Alerts",
+                  "value": "310",
+                  "description": ""
+                },
+                {
+                  "name": "SaaS Defense Alerts",
+                  "value": "320",
+                  "description": ""
+                },
+                {
+                  "name": "SaaS Protection",
+                  "value": "313",
+                  "description": ""
+                },
+                {
+                  "name": "Scheduled Upgrade",
+                  "value": "293",
+                  "description": ""
+                },
+                {
+                  "name": "Security",
+                  "value": "194",
+                  "description": ""
+                },
+                {
+                  "name": "Security",
+                  "value": "284",
+                  "description": ""
+                },
+                {
+                  "name": "Security",
+                  "value": "287",
+                  "description": ""
+                },
+                {
+                  "name": "Security Audit",
+                  "value": "245",
+                  "description": ""
+                },
+                {
+                  "name": "Security Awareness",
+                  "value": "299",
+                  "description": ""
+                },
+                {
+                  "name": "Server",
+                  "value": "11",
+                  "description": ""
+                },
+                {
+                  "name": "Server",
+                  "value": "145",
+                  "description": ""
+                },
+                {
+                  "name": "Server",
+                  "value": "181",
+                  "description": ""
+                },
+                {
+                  "name": "Server",
+                  "value": "195",
+                  "description": ""
+                },
+                {
+                  "name": "Server",
+                  "value": "210",
+                  "description": ""
+                },
+                {
+                  "name": "Server Migration",
+                  "value": "260",
+                  "description": ""
+                },
+                {
+                  "name": "Service Activation",
+                  "value": "288",
+                  "description": ""
+                },
+                {
+                  "name": "Service Activation",
+                  "value": "305",
+                  "description": ""
+                },
+                {
+                  "name": "Settings Change",
+                  "value": "196",
+                  "description": ""
+                },
+                {
+                  "name": "Settings/Config",
+                  "value": "380",
+                  "description": ""
+                },
+                {
+                  "name": "Sharepoint Configuration",
+                  "value": "261",
+                  "description": ""
+                },
+                {
+                  "name": "Site Survey",
+                  "value": "225",
+                  "description": ""
+                },
+                {
+                  "name": "Site Updates",
+                  "value": "229",
+                  "description": ""
+                },
+                {
+                  "name": "Socrates Related",
+                  "value": "355",
+                  "description": ""
+                },
+                {
+                  "name": "Software",
+                  "value": "16",
+                  "description": ""
+                },
+                {
+                  "name": "Software",
+                  "value": "146",
+                  "description": ""
+                },
+                {
+                  "name": "Software",
+                  "value": "154",
+                  "description": ""
+                },
+                {
+                  "name": "Software",
+                  "value": "182",
+                  "description": ""
+                },
+                {
+                  "name": "Software",
+                  "value": "211",
+                  "description": ""
+                },
+                {
+                  "name": "Software",
+                  "value": "218",
+                  "description": ""
+                },
+                {
+                  "name": "Software Assist",
+                  "value": "279",
+                  "description": ""
+                },
+                {
+                  "name": "Special Order",
+                  "value": "226",
+                  "description": ""
+                },
+                {
+                  "name": "SQL",
+                  "value": "125",
+                  "description": ""
+                },
+                {
+                  "name": "SSD Upgrade",
+                  "value": "349",
+                  "description": ""
+                },
+                {
+                  "name": "Staff Offboarding",
+                  "value": "272",
+                  "description": ""
+                },
+                {
+                  "name": "Staff Onboarding",
+                  "value": "273",
+                  "description": ""
+                },
+                {
+                  "name": "STP Port Blocking",
+                  "value": "302",
+                  "description": ""
+                },
+                {
+                  "name": "Student Onboarding",
+                  "value": "306",
+                  "description": ""
+                },
+                {
+                  "name": "Switch",
+                  "value": "199",
+                  "description": ""
+                },
+                {
+                  "name": "Switch",
+                  "value": "236",
+                  "description": ""
+                },
+                {
+                  "name": "System Performance",
+                  "value": "109",
+                  "description": ""
+                },
+                {
+                  "name": "TAM Audit",
+                  "value": "344",
+                  "description": ""
+                },
+                {
+                  "name": "Technology Success",
+                  "value": "386",
+                  "description": ""
+                },
+                {
+                  "name": "Tops Server",
+                  "value": "329",
+                  "description": ""
+                },
+                {
+                  "name": "Training",
+                  "value": "244",
+                  "description": ""
+                },
+                {
+                  "name": "Triage",
+                  "value": "220",
+                  "description": ""
+                },
+                {
+                  "name": "Trial Setup",
+                  "value": "255",
+                  "description": ""
+                },
+                {
+                  "name": "Unifi Site Migration",
+                  "value": "269",
+                  "description": ""
+                },
+                {
+                  "name": "Uninstall",
+                  "value": "365",
+                  "description": ""
+                },
+                {
+                  "name": "Upgrade",
+                  "value": "275",
+                  "description": ""
+                },
+                {
+                  "name": "Upgrade Opp",
+                  "value": "314",
+                  "description": ""
+                },
+                {
+                  "name": "User Management",
+                  "value": "126",
+                  "description": ""
+                },
+                {
+                  "name": "User Setup",
+                  "value": "388",
+                  "description": ""
+                },
+                {
+                  "name": "User Setup/Update",
+                  "value": "277",
+                  "description": ""
+                },
+                {
+                  "name": "Virus Removal",
+                  "value": "239",
+                  "description": ""
+                },
+                {
+                  "name": "VPN",
+                  "value": "198",
+                  "description": ""
+                },
+                {
+                  "name": "VPN",
+                  "value": "333",
+                  "description": ""
+                },
+                {
+                  "name": "VPN Setup",
+                  "value": "267",
+                  "description": ""
+                },
+                {
+                  "name": "WAN Failover",
+                  "value": "292",
+                  "description": ""
+                },
+                {
+                  "name": "Warning",
+                  "value": "296",
+                  "description": ""
+                },
+                {
+                  "name": "Web Development",
+                  "value": "228",
+                  "description": ""
+                },
+                {
+                  "name": "Website",
+                  "value": "241",
+                  "description": ""
+                },
+                {
+                  "name": "Wifi",
+                  "value": "274",
+                  "description": ""
+                },
+                {
+                  "name": "Wordpress Maintenance",
+                  "value": "230",
+                  "description": ""
+                },
+                {
+                  "name": "XRay",
+                  "value": "289",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "ticketCategory",
+              "displayName": "Ticket category (Picklist | ticketCategory)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "AEM Alert",
+                  "value": "2",
+                  "description": ""
+                },
+                {
+                  "name": "Alert Central",
+                  "value": "113",
+                  "description": ""
+                },
+                {
+                  "name": "Autotask Testing Category",
+                  "value": "115",
+                  "description": ""
+                },
+                {
+                  "name": "Billing",
+                  "value": "102",
+                  "description": ""
+                },
+                {
+                  "name": "Cloud Services",
+                  "value": "105",
+                  "description": ""
+                },
+                {
+                  "name": "Daily Service Administration",
+                  "value": "116",
+                  "description": ""
+                },
+                {
+                  "name": "Datto Alert",
+                  "value": "4",
+                  "description": ""
+                },
+                {
+                  "name": "Datto Networking Alert",
+                  "value": "6",
+                  "description": ""
+                },
+                {
+                  "name": "Graphus Alert",
+                  "value": "119",
+                  "description": ""
+                },
+                {
+                  "name": "Installation",
+                  "value": "100",
+                  "description": ""
+                },
+                {
+                  "name": "Kilkenny College Support",
+                  "value": "118",
+                  "description": ""
+                },
+                {
+                  "name": "RMA",
+                  "value": "5",
+                  "description": ""
+                },
+                {
+                  "name": "Rocket Cyber Alert",
+                  "value": "114",
+                  "description": ""
+                },
+                {
+                  "name": "Sales",
+                  "value": "103",
+                  "description": ""
+                },
+                {
+                  "name": "Standard",
+                  "value": "3",
+                  "description": ""
+                },
+                {
+                  "name": "Technical Support",
+                  "value": "109",
+                  "description": "Default value"
+                },
+                {
+                  "name": "TRIAGE",
+                  "value": "104",
+                  "description": ""
+                },
+                {
+                  "name": "Unifi Event",
+                  "value": "117",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "ticketNumber",
+              "displayName": "Ticket number (String | ticketNumber)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "ticketType",
+              "displayName": "Ticket type (Picklist | ticketType)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "Alert",
+                  "value": "5",
+                  "description": ""
+                },
+                {
+                  "name": "Change Request",
+                  "value": "4",
+                  "description": ""
+                },
+                {
+                  "name": "Incident",
+                  "value": "2",
+                  "description": ""
+                },
+                {
+                  "name": "Problem",
+                  "value": "3",
+                  "description": ""
+                },
+                {
+                  "name": "Service Request",
+                  "value": "1",
+                  "description": "Default value"
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "title",
+              "displayName": "Title (String | title)",
+              "type": "string",
+              "required": true,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "Alert Level",
+              "displayName": "Alert level (Picklist | Alert Level)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "Critical",
+                  "value": "CRITICAL",
+                  "description": ""
+                },
+                {
+                  "name": "High",
+                  "value": "HIGH",
+                  "description": ""
+                },
+                {
+                  "name": "Informational",
+                  "value": "INFORM",
+                  "description": ""
+                },
+                {
+                  "name": "Warning",
+                  "value": "WARN",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "Alert Tag",
+              "displayName": "Alert tag (Picklist | Alert Tag)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "ESET",
+                  "value": "ESET",
+                  "description": ""
+                },
+                {
+                  "name": "Unifi",
+                  "value": "UNIFI",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "Assigned To",
+              "displayName": "Assigned to (Picklist | Assigned To)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "SP",
+                  "value": "SP",
+                  "description": ""
+                },
+                {
+                  "name": "TF",
+                  "value": "TF",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "Auto FFup Triggered",
+              "displayName": "Auto f fup triggered (Picklist | Auto FFup Triggered)",
+              "type": "options",
+              "required": true,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "No",
+                  "value": "No",
+                  "description": "Default value"
+                },
+                {
+                  "name": "Yes",
+                  "value": "Yes",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "Current Hosting Provider",
+              "displayName": "Current hosting provider (1 | Current Hosting Provider)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "Customer Responded to Closed Ticket",
+              "displayName": "Customer responded to closed ticket (Picklist | Customer Responded to Closed Ticket)",
+              "type": "options",
+              "required": true,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "No",
+                  "value": "No",
+                  "description": "Default value"
+                },
+                {
+                  "name": "Yes",
+                  "value": "Yes",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "Escalated",
+              "displayName": "Escalated (Picklist | Escalated)",
+              "type": "options",
+              "required": true,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "No",
+                  "value": "No",
+                  "description": "Default value"
+                },
+                {
+                  "name": "Yes",
+                  "value": "Yes",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "Excl. Daily Review",
+              "displayName": "Excl daily review (Picklist | Excl. Daily Review)",
+              "type": "options",
+              "required": true,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "No",
+                  "value": "No",
+                  "description": "Default value"
+                },
+                {
+                  "name": "Yes",
+                  "value": "Yes",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "Hosting Login Credentials",
+              "displayName": "Hosting login credentials (1 | Hosting Login Credentials)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "Internal Status",
+              "displayName": "Internal status (1 | Internal Status)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "n8n Agent Identifier",
+              "displayName": "N8n agent identifier (1 | n8n Agent Identifier)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "n8n Alert Type",
+              "displayName": "N8n alert type (1 | n8n Alert Type)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "Password",
+              "displayName": "Password (1 | Password)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "Perfect Completion",
+              "displayName": "Perfect completion (Picklist | Perfect Completion)",
+              "type": "options",
+              "required": true,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "No",
+                  "value": "No",
+                  "description": ""
+                },
+                {
+                  "name": "Yes",
+                  "value": "Yes",
+                  "description": "Default value"
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "Re-Opened",
+              "displayName": "Re opened (Picklist | Re-Opened)",
+              "type": "options",
+              "required": true,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "No",
+                  "value": "No",
+                  "description": "Default value"
+                },
+                {
+                  "name": "Yes",
+                  "value": "Yes",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "Reviewed - Ready To Bill",
+              "displayName": "Reviewed ready to bill (Picklist | Reviewed - Ready To Bill)",
+              "type": "options",
+              "required": true,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "In Review",
+                  "value": "In Review",
+                  "description": ""
+                },
+                {
+                  "name": "No",
+                  "value": "No",
+                  "description": "Default value"
+                },
+                {
+                  "name": "Yes",
+                  "value": "Yes",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "Room No.",
+              "displayName": "Room no (1 | Room No.)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "SC Watch List",
+              "displayName": "Sc watch list (Picklist | SC Watch List)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "Needs Update",
+                  "value": "Needs Update",
+                  "description": ""
+                },
+                {
+                  "name": "No",
+                  "value": "No",
+                  "description": ""
+                },
+                {
+                  "name": "Survey Exempt",
+                  "value": "Survey Exempt",
+                  "description": ""
+                },
+                {
+                  "name": "Updated",
+                  "value": "Updated",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "Unifi Alert Type",
+              "displayName": "Unifi alert type (Picklist | Unifi Alert Type)",
+              "type": "options",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "Disconnection",
+                  "value": "DISCONNECT",
+                  "description": ""
+                },
+                {
+                  "name": "IP Conflict",
+                  "value": "IPCONFLICT",
+                  "description": ""
+                },
+                {
+                  "name": "Reconnection",
+                  "value": "RECONNECT",
+                  "description": ""
+                },
+                {
+                  "name": "Rogue AP",
+                  "value": "ROGUEAP",
+                  "description": ""
+                },
+                {
+                  "name": "Threat",
+                  "value": "THREAT",
+                  "description": ""
+                },
+                {
+                  "name": "Update",
+                  "value": "UPDATE",
+                  "description": ""
+                }
+              ],
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "Location Code",
+              "displayName": "Location code (1 | Location Code)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "Items Left",
+              "displayName": "Items left (1 | Items Left)",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "n8n-nodes-autotask.autotask",
+      "typeVersion": 1,
+      "position": [
+        1740,
+        0
+      ],
+      "id": "8ca9fe36-8a2e-444c-b887-ab5f445b16b4",
+      "name": "Create a ticket",
+      "credentials": {
+        "autotaskApi": {
+          "id": "eeU5PmJhYjQG7Do5",
+          "name": "Autotask account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input data - corrected order\nconst allItems = $input.all();\n\n// Debug: Log the structure to understand what we're working with\nconsole.log('Number of input items:', allItems.length);\nconsole.log('First item keys:', Object.keys(allItems[0]));\nif (allItems.length > 1) {\n  console.log('Second item keys:', Object.keys(allItems[1]));\n}\n\n// Device data comes first, company data second\nconst siteDeviceData = allItems[0].json;  // Device data from first input\nconst companies = allItems[1].json;       // Company data from second input\n\n// Additional debug\nconsole.log('Device data type:', Array.isArray(siteDeviceData) ? 'array' : typeof siteDeviceData);\nconsole.log('Companies type:', Array.isArray(companies) ? 'array' : typeof companies);\n\nconst results = [];\n\n// Ensure we have arrays to work with\nif (!Array.isArray(companies)) {\n  throw new Error('Companies data is not an array. Got: ' + typeof companies);\n}\n\nif (!Array.isArray(siteDeviceData)) {\n  throw new Error('Site device data is not an array. Got: ' + typeof siteDeviceData);\n}\n\n// Process each company\nfor (const company of companies) {\n  console.log(`Processing company: ${company.companyName}`);\n  \n  // Find matching site data by company name\n  const matchingSite = siteDeviceData.find(site => {\n    // Try exact match first\n    if (site.siteName === company.companyName) return true;\n    \n    // Try partial matches for cases like \"Number 16 Periodontics\" vs \"Montrose Healthcare LTD t/a Number 16 Periodontics\"\n    const siteName = site.siteName.toLowerCase();\n    const companyName = company.companyName.toLowerCase();\n    \n    return siteName.includes(companyName) || companyName.includes(siteName);\n  });\n  \n  if (matchingSite && matchingSite.devices) {\n    const devices = matchingSite.devices;\n    const deviceEntries = Object.entries(devices);\n    const deviceCount = deviceEntries.length;\n    \n    console.log(`Found ${deviceCount} devices for ${company.companyName}`);\n    \n    // Only create tickets for sites with devices\n    if (deviceCount > 0) {\n      // Build device details section\n      let deviceDetails = '';\n      \n      for (const [hostname, device] of deviceEntries) {\n        deviceDetails += `Hostname: ${hostname}\nDescription: ${device.description}\nLast Seen: ${device.lastSeenInDays} days ago\nLast Audit: ${device.lastAuditInDays} days ago\nLast Logged In User: ${device.lastLoggedInUser}\nOperating System: N/A\nExternal IP: N/A\nAntivirus Installed: ${device.antivirusProduct}\nExpected: Datto AV\nRMM Link: ${device.portalUrl}\n\n---\n`;\n      }\n      \n      // Build the complete description\n      const description = `WRONG ANTIVIRUS INSTALLED: ANTIVIRUS COMPLIANCE REPORT\n\nORGANISATION: ${company.companyName}\n\n---\nSTATUS SUMMARY\n---\nTotal devices in this site not compliant: ${deviceCount}\n\n---\nDEVICE DETAILS\n---\n${deviceDetails}`;\n      \n      results.push({\n        json: {\n          companyId: company.id,\n          companyName: company.companyName,\n          siteName: matchingSite.siteName,\n          deviceCount: deviceCount,\n          description: description,\n          // Add other fields you might need for Autotask ticket creation\n          title: `Antivirus Compliance Issue - ${company.companyName}`,\n          priority: 'Medium',\n          status: 'New'\n        }\n      });\n    }\n  } else {\n    // Log companies without matching device data\n    console.log(`No device data found for company: ${company.companyName}`);\n  }\n}\n\nconsole.log(`Created ${results.length} tickets for companies with non-compliant devices`);\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1240,
+        0
+      ],
+      "id": "b0da6e99-58af-497d-a1ef-b9c84abb719b",
+      "name": "Code1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get all account devices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get all account devices": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Get multiple entities using advanced filters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get multiple entities using advanced filters": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Create a ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7ca7bd99-357c-4b0a-9edb-03c0058406eb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9f4157f0fb8050a5df52a53fc6706cbdb98e8ea12d9d2ccf0ce505167c7bacf8"
+  },
+  "id": "zTsDY9IiyIONjfGO",
+  "tags": []
+}

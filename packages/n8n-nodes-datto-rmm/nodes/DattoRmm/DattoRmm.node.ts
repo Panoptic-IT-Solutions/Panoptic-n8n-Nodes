@@ -16,6 +16,7 @@ import { executeJobOperation } from './resources/job/execute';
 import { executeAuditOperation } from './resources/audit/execute';
 import { executeSystemOperation } from './resources/system/execute';
 import { executeFilterOperation } from './resources/filter/execute';
+import { executeActivityLogOperation } from './resources/activity-log/execute';
 
 // Import resource definitions and field descriptions
 import { RESOURCE_DEFINITIONS } from './resources/definitions';
@@ -27,6 +28,7 @@ import { jobFields } from './resources/job/description';
 import { auditFields } from './resources/audit/description';
 import { systemFields } from './resources/system/description';
 import { filterFields } from './resources/filter/description';
+import { activityLogFields } from './resources/activity-log/description';
 import { addOperationsToResource } from './helpers/resource-operations.helper';
 import { getResourceMapperFields } from './helpers/resourceMapper';
 
@@ -80,6 +82,7 @@ export class DattoRmm implements INodeType {
 			...addOperationsToResource(auditFields, { resourceName: 'audit' }),
 			...addOperationsToResource(systemFields, { resourceName: 'system' }),
 			...addOperationsToResource(filterFields, { resourceName: 'filter' }),
+			...addOperationsToResource(activityLogFields, { resourceName: 'activityLog' }),
 		],
 	};
 
@@ -111,6 +114,9 @@ export class DattoRmm implements INodeType {
 
 			case 'filter':
 				return executeFilterOperation.call(this);
+
+			case 'activityLog':
+				return executeActivityLogOperation.call(this);
 
 			default:
 				throw new NodeOperationError(

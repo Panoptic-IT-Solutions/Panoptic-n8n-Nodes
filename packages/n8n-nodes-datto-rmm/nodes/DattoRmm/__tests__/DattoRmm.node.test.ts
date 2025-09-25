@@ -7,12 +7,17 @@ jest.mock('../resources/account/execute', () => ({
 	executeAccountOperation: jest.fn(),
 }));
 
+jest.mock('../resources/activity-log/execute', () => ({
+	executeActivityLogOperation: jest.fn(),
+}));
+
 // Mock helpers
 jest.mock('../helpers/resourceMapper', () => ({
 	getResourceMapperFields: jest.fn(),
 }));
 
 import { executeAccountOperation } from '../resources/account/execute';
+import { executeActivityLogOperation } from '../resources/activity-log/execute';
 import { getResourceMapperFields } from '../helpers/resourceMapper';
 
 describe('DattoRmm Node', () => {

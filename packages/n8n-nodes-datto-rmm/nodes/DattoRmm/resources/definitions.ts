@@ -39,6 +39,12 @@ export const RESOURCE_DEFINITIONS: INodePropertyOptions[] = [
 			'Access audit logs and compliance reports for security and administrative activities',
 	},
 	{
+		name: 'Activity Log',
+		value: 'activityLog',
+		description:
+			'View and search activity logs for user actions, device activities, and system events with 180-day retention',
+	},
+	{
 		name: 'System',
 		value: 'system',
 		description: 'Manage system-level configuration and administrative settings',
