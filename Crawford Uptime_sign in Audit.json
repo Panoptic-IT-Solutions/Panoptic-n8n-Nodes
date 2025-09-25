@@ -1,0 +1,298 @@
+{
+  "name": "Crawford Uptime/sign in Audit",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "getDevices",
+        "siteName": "Crawford",
+        "useAdvancedFilters": true,
+        "resourceMapper": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@panoptic-it-solutions/n8n-nodes-datto-rmm.dattoRmm",
+      "typeVersion": 1,
+      "position": [
+        224,
+        128
+      ],
+      "id": "ec5f3cd9-cf3b-4dad-9904-b5f8822724bf",
+      "name": "Get all account devices",
+      "credentials": {
+        "dattoRmmApi": {
+          "id": "1kIgTcSpphFhRmw9",
+          "name": "Datto RMM account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// === CONFIG ===\nconst TZ = 'Europe/Dublin';\nconst MS_DAY = 24 * 60 * 60 * 1000;\n\n// --- Helpers ---\nconst humanDuration = (ms) => {\n  if (ms == null) return null;\n  const days  = Math.floor(ms / MS_DAY);\n  const hours = Math.floor((ms % MS_DAY) / 3.6e6);\n  const mins  = Math.floor((ms % 3.6e6) / 6e4);\n  return `${days}d ${hours}h ${mins}m`;\n};\n\n// === MAIN ===\nconst nowMs = Date.now();\n\n// With Merge node, each item contains both device data and audit data\nconst results = $input.all().map(item => {\n  const dev = item.json;\n  \n  const lastRebootMs = typeof dev.lastReboot === 'number' ? dev.lastReboot : null;\n  const refMs = typeof dev.lastSeen === 'number' ? dev.lastSeen : nowMs;\n  const uptimeMs = lastRebootMs != null ? (refMs - lastRebootMs) : null;\n\n  return {\n    json: {\n      ...dev,\n      // Extract system info from audit data\n      manufacturer: dev.systemInfo?.manufacturer || 'N/A',\n      model: dev.systemInfo?.model || 'N/A',\n      totalMemoryGB: dev.systemInfo?.totalPhysicalMemory ? Math.round(dev.systemInfo.totalPhysicalMemory / (1024**3)) : null,\n      cpuCores: dev.systemInfo?.totalCpuCores || null,\n\n      // Uptime calculations\n      lastRebootEpoch: lastRebootMs,\n      lastRebootISO: lastRebootMs != null ? new Date(lastRebootMs).toISOString() : null,\n      lastRebootLocal: lastRebootMs != null ? new Date(lastRebootMs).toLocaleString('en-IE', { timeZone: TZ }) : null,\n      uptimeMs,\n      uptimeDays: uptimeMs != null ? +(uptimeMs / MS_DAY).toFixed(2) : null,\n      uptimeHuman: humanDuration(uptimeMs),\n    }\n  };\n});\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        112
+      ],
+      "id": "18d5d36e-5737-4ea9-9873-b02fe99fcee2",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "resource": "searchFilter",
+        "filter": {
+          "group": [
+            {
+              "items": {
+                "itemType": [
+                  {
+                    "field": "companyName",
+                    "op": "contains",
+                    "value": "={{ $json.siteName }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-autotask.autotask",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        -224
+      ],
+      "id": "083117bf-8c20-42da-b745-7eae104eaa02",
+      "name": "Build a search filter"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === CONFIG ===\nconst TZ = 'Europe/Dublin';\nconst UPTIME_WARN_DAYS = 30; // highlight if uptime >= this\n\n// === HOSTNAME TO VALUE MAPPING ===\nconst hostnameValues = {\n  'CRP-IE3GTVVN3': { new: 950, current: 620 },\n  'CRP-IE3T7N5W3': { new: 930, current: 595 },\n  'CRP-IEH84181D3P': { new: 1200, current: 950 },\n  'CRP-IEQAB247327': { new: 1400, current: 400 },\n  'CRP-IE147JYM3': { new: 950, current: 620 },\n  'CRP-IEH84440SRH': { new: 1600, current: 950 },\n  'CRP-IEQAB247333': { new: 1400, current: 400 },\n  'CRP-IECL0S904': { new: 950, current: 620 },\n  'DESKTOP-V2PF0O1': { new: 1400, current: 400 },\n  'CRP-IEHJ36P34': { new: 999, current: 615 },\n  '0c379634078b': { new: 1159, current: 730 },\n  'CRP-IEGNVSVN3': { new: 950, current: 620 },\n  'CRP-IE4P61YM3': { new: 950, current: 620 },\n  'CRP-IE053B57600': { new: 1600, current: 699 },\n  'CRP-IE5X1N5W3': { new: 950, current: 620 },\n  'CRP-IE69PNYM3': { new: 950, current: 620 },\n  'CRP-UK9FSXVN3': { new: 950, current: 620 },\n  'crvostro2': { new: 719, current: 575 },\n  'CRP-IEGDBNVN3': { new: 1000, current: 439 },\n  'CRP-IEGJ36P34': { new: 1000, current: 650 },\n  'CRP-IE6ST2JP3': { new: 950, current: 620 },\n  'CRP-UKQAA013596': { new: 1400, current: 400 },\n  'CRP-IE6YKPMJ3': { new: 950, current: 620 },\n  'CRP-IE494J5W3': { new: 950, current: 620 },\n  'CRFujitsu1': { new: 1400, current: 400 },\n  'CRP-IEJRHJYM3': { new: 950, current: 620 },\n  'CRP-IEBC3ZVN3': { new: 950, current: 620 },\n  'CRAsusZX1': { new: 1159, current: 730 },\n  'CRP-IEJR6PVN3': { new: 950, current: 620 },\n  'CRP-IE4V7JYM3': { new: 950, current: 620 },\n  'CRP-IE8NXS904': { new: 950, current: 620 },\n  'CRP-IETEST1': { new: 950, current: 620 },\n  'CRP-IE005050449': { new: 700, current: 500 },\n  'CRP-IE005097444': { new: 800, current: 550 },\n  'CRP-IEQAB171494': { new: 1200, current: 400 },\n  'CRP-IE0A9A87600': { new: 1600, current: 700 },\n  'CRP-IECK6JYM3': { new: 950, current: 620 },\n  'CRP-UKFGCTVN3': { new: 950, current: 620 },\n  'CRP-IEBW2T904': { new: 950, current: 620 },\n  'crvostro1': { new: 719, current: 575 },\n  'CRP-IEQAB247316': { new: 1400, current: 400 },\n  'CRP-UKQAB128344': { new: 1300, current: 400 },\n  'CRP-IE18VNVN3': { new: 950, current: 620 },\n  'CRP-IEQAB247284': { new: 1400, current: 400 },\n  'CRP-IED1QZXR3': { new: 950, current: 620 },\n  'LAPTOP-35NPK31K': { new: 475, current: 350 },\n  'CRP-IEJ5MXVN3': { new: 950, current: 620 },\n  'CRP-IEQAB247281': { new: 1300, current: 400 },\n  'CRP-IED3BNVN3': { new: 950, current: 620 }\n};\n\n// === HELPERS ===\nconst toTextDate = (ms) =>\n  ms != null ? new Date(ms).toLocaleString('en-IE', { timeZone: TZ }) : 'N/A';\n\nconst escapeHtml = (str) =>\n  String(str ?? '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;');\n\nconst escapeCsv = (str) => {\n  if (str == null) return '';\n  const strValue = String(str);\n  // If contains comma, quote, or newline, wrap in quotes and escape internal quotes\n  if (strValue.includes(',') || strValue.includes('\"') || strValue.includes('\\n')) {\n    return `\"${strValue.replace(/\"/g, '\"\"')}\"`;\n  }\n  return strValue;\n};\n\nconst groupBy = (arr, keyFn) =>\n  arr.reduce((acc, item) => {\n    const k = keyFn(item);\n    (acc[k] ||= []).push(item);\n    return acc;\n  }, {});\n\n// Extract and sort\nconst devices = $input.all().map(i => i.json);\ndevices.sort((a, b) => {\n  if (a.uptimeMs == null && b.uptimeMs == null) return 0;\n  if (a.uptimeMs == null) return 1;\n  if (b.uptimeMs == null) return -1;\n  return b.uptimeMs - a.uptimeMs;\n});\n\nconst bySite = groupBy(devices, d => d.siteName || 'Unknown Site');\n\n// === BUILD HTML ===\nlet html = `\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"utf-8\" />\n<title>Uptime / Last Reboot Report</title>\n<style>\n  body { font-family: Arial, Helvetica, sans-serif; color:#333; line-height:1.4; }\n  h1,h2 { margin: 0 0 12px 0; }\n  h1 { font-size:20px; }\n  h2 { font-size:16px; margin-top:24px; }\n  table { border-collapse: collapse; width: 100%; margin-top:8px; }\n  th, td { border:1px solid #ccc; padding:6px 8px; font-size:13px; text-align:left; }\n  th { background:#f5f5f5; }\n  tr.warn { background:#ffe6e6; }\n  .small { font-size:11px; color:#777; }\n</style>\n</head>\n<body>\n<h1>Uptime / Last Reboot Report</h1>\n<p class=\"small\">Generated: ${new Date().toLocaleString('en-IE', { timeZone: TZ })}</p>\n`;\n\n// === BUILD CSV ===\nconst csvHeaders = [\n  'Site Name',\n  'Hostname', \n  'Description',\n  'Manufacturer',\n  'Model',\n  'RAM (GB)',\n  'CPU Cores',\n  'Est Value New',\n  'Est Value Now',\n  'Uptime',\n  'Uptime Days',\n  'Last Reboot',\n  'Last Seen',\n  'Logged In User',\n  'Online Status'\n];\n\nlet csvContent = csvHeaders.join(',') + '\\n';\n\nfor (const [site, list] of Object.entries(bySite)) {\n  html += `<h2>${escapeHtml(site)}</h2>`;\n  html += `\n  <table>\n    <thead>\n      <tr>\n        <th>Hostname</th>\n        <th>Description</th>\n        <th>Manufacturer</th>\n        <th>Model</th>\n        <th>RAM (GB)</th>\n        <th>CPU Cores</th>\n        <th>Est Value New</th>\n        <th>Est Value Now</th>\n        <th>Uptime</th>\n        <th>Last Reboot</th>\n        <th>Last Seen</th>\n        <th>Logged In User</th>\n      </tr>\n    </thead>\n    <tbody>\n  `;\n\n  for (const d of list) {\n    const warn = d.uptimeDays != null && d.uptimeDays >= UPTIME_WARN_DAYS;\n    // strip domain prefix\n    const user = d.lastLoggedInUser\n      ? d.lastLoggedInUser.split('\\\\').pop()\n      : '';\n    \n    const uptimeDisplay = d.uptimeHuman || (d.uptimeDays != null ? d.uptimeDays + 'd' : 'N/A');\n    const lastRebootDisplay = d.lastRebootLocal || toTextDate(d.lastRebootEpoch);\n    const lastSeenDisplay = toTextDate(d.lastSeen);\n    \n    // Get values for this hostname\n    const hostname = d.hostname || '';\n    const values = hostnameValues[hostname] || { new: '', current: '' };\n    \n    // Add to HTML\n    html += `\n      <tr class=\"${warn ? 'warn' : ''}\">\n        <td>${escapeHtml(hostname)}</td>\n        <td>${escapeHtml(d.description || '')}</td>\n        <td>${escapeHtml(d.manufacturer || 'N/A')}</td>\n        <td>${escapeHtml(d.model || 'N/A')}</td>\n        <td>${d.totalMemoryGB || 'N/A'}</td>\n        <td>${d.cpuCores || 'N/A'}</td>\n        <td>${values.new}</td>\n        <td>${values.current}</td>\n        <td>${escapeHtml(uptimeDisplay)}</td>\n        <td>${escapeHtml(lastRebootDisplay)}</td>\n        <td>${escapeHtml(lastSeenDisplay)}</td>\n        <td>${escapeHtml(user)}</td>\n      </tr>\n    `;\n    \n    // Add to CSV\n    const csvRow = [\n      escapeCsv(site),\n      escapeCsv(hostname),\n      escapeCsv(d.description || ''),\n      escapeCsv(d.manufacturer || 'N/A'),\n      escapeCsv(d.model || 'N/A'),\n      escapeCsv(d.totalMemoryGB || 'N/A'),\n      escapeCsv(d.cpuCores || 'N/A'),\n      escapeCsv(values.new),\n      escapeCsv(values.current),\n      escapeCsv(uptimeDisplay),\n      escapeCsv(d.uptimeDays || 'N/A'),\n      escapeCsv(lastRebootDisplay),\n      escapeCsv(lastSeenDisplay),\n      escapeCsv(user),\n      escapeCsv(d.online ? 'Online' : 'Offline')\n    ];\n    \n    csvContent += csvRow.join(',') + '\\n';\n  }\n\n  html += `\n    </tbody>\n  </table>\n  `;\n}\n\nhtml += `\n</body>\n</html>\n`;\n\n// Plaintext fallback\nconst text = html\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, '')\n  .replace(/<\\/?(?:table|thead|tbody|tr|th|td|div|span|p|h[1-6])>/gi, '\\n')\n  .replace(/<[^>]+>/g, '')\n  .replace(/\\n{2,}/g, '\\n')\n  .trim();\n\n// Create CSV binary data (correct format)\nconst dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format\nconst csvFileName = `uptime-report-${dateStr}.csv`;\nconst csvBase64 = Buffer.from(csvContent, 'utf8').toString('base64');\n\nreturn [\n  {\n    json: {\n      subject: `Uptime / Last Reboot Report - ${new Date().toLocaleDateString('en-IE', { timeZone: TZ })}`,\n      html,\n      text\n    },\n    binary: {\n      data: {\n        data: csvBase64,\n        mimeType: 'text/csv',\n        fileName: csvFileName\n      }\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        112
+      ],
+      "id": "32b32a95-e215-4587-8c3b-9cf1fb6a030d",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months",
+              "triggerAtDayOfMonth": 24,
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        80
+      ],
+      "id": "2c917101-01fe-44ef-8d63-6e266c736667",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "toRecipients": "donnacha@panoptic.ie,marian.grennan@crpayrollsolutions.com",
+        "subject": "={{ $json.subject }}",
+        "bodyContent": "={{ $json.html }}",
+        "additionalFields": {
+          "attachments": {
+            "attachments": [
+              {
+                "binaryPropertyName": "data"
+              }
+            ]
+          },
+          "bodyContentType": "html"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        80
+      ],
+      "id": "68395d12-9f00-4e7e-aafc-4c1c57134d71",
+      "name": "Send a message",
+      "webhookId": "26ee4289-0d9a-4859-b141-30d0f87eff3d"
+    },
+    {
+      "parameters": {
+        "resource": "audit",
+        "deviceUid": "={{ $json.uid }}",
+        "resourceMapper": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@panoptic-it-solutions/n8n-nodes-datto-rmm.dattoRmm",
+      "typeVersion": 1,
+      "position": [
+        416,
+        -80
+      ],
+      "id": "f3f07282-01bc-48b3-81a3-045e49879864",
+      "name": "Get device audit",
+      "credentials": {
+        "dattoRmmApi": {
+          "id": "1kIgTcSpphFhRmw9",
+          "name": "Datto RMM account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "portalUrl",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        608,
+        112
+      ],
+      "id": "20c76ea6-3a75-4217-951e-53b4413d22cb",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "resource": "activityLog",
+        "operation": "getByDevice",
+        "deviceUid": "={{ $json.uid }}",
+        "deviceOptions": {},
+        "options": {}
+      },
+      "type": "@panoptic-it-solutions/n8n-nodes-datto-rmm.dattoRmm",
+      "typeVersion": 1,
+      "position": [
+        448,
+        288
+      ],
+      "id": "27a2dc2b-27ac-4b13-8ec2-aaaf987f66c1",
+      "name": "Get activity logs by device",
+      "credentials": {
+        "dattoRmmApi": {
+          "id": "1kIgTcSpphFhRmw9",
+          "name": "Datto RMM account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get all account devices": {
+      "main": [
+        [
+          {
+            "node": "Get device audit",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Get activity logs by device",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get all account devices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get device audit": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7f883834-2947-4533-abaf-771d4fda4584",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9f4157f0fb8050a5df52a53fc6706cbdb98e8ea12d9d2ccf0ce505167c7bacf8"
+  },
+  "id": "YZqpmrxrVZWSwOYh",
+  "tags": [
+    {
+      "createdAt": "2025-07-11T11:05:33.106Z",
+      "updatedAt": "2025-07-11T11:05:33.106Z",
+      "id": "uN0rzxQJ0FKbuEAm",
+      "name": "Centralised Services"
+    }
+  ]
+}

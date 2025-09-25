@@ -117,19 +117,92 @@ async function handleGetAllDeviceStatus(this: IExecuteFunctions, itemIndex: numb
 			devices = devices.filter((device: any) => device.uid === additionalFields.deviceId);
 		}
 
-		// Get recent alerts for status change detection
-		const alerts = await dattoRmmApiRequestAllItems.call(
-			this,
-			'GET',
-			'/api/v2/account/alerts/open',
-		);
+		// Get alerts with date filtering if possible
+		let alerts: any[] = [];
+		try {
+			// Try to get open alerts
+			const openAlerts = await dattoRmmApiRequestAllItems.call(
+				this,
+				'GET',
+				'/api/v2/account/alerts/open',
+			);
+			alerts = [...alerts, ...openAlerts];
 
-		// Combine device data with alert information to create activity-like records
-		const deviceActivities = devices.map((device: any) => {
-			const deviceAlerts = alerts.filter((alert: any) => alert.deviceUid === device.uid);
+			// Try to get resolved alerts for more historical data
+			const resolvedAlerts = await dattoRmmApiRequestAllItems.call(
+				this,
+				'GET',
+				'/api/v2/account/alerts/resolved',
+			);
+			alerts = [...alerts, ...resolvedAlerts];
+		} catch (error) {
+			console.warn('Could not fetch alerts:', error.message);
+		}
 
-			return {
-				id: device.uid,
+		// Get historical audit data for each device to create activity timeline
+		const deviceActivitiesPromises = devices.map(async (device: any) => {
+			const deviceActivities: IDeviceActivity[] = [];
+
+			// Get audit data with historical information
+			try {
+				const queryParams: any = {};
+				if (additionalFields.dateFrom || additionalFields.dateTo) {
+					queryParams.includeArchived = true;
+					if (additionalFields.dateFrom) {
+						queryParams.startDate = new Date(additionalFields.dateFrom as string)
+							.toISOString()
+							.split('T')[0];
+					}
+					if (additionalFields.dateTo) {
+						queryParams.endDate = new Date(additionalFields.dateTo as string)
+							.toISOString()
+							.split('T')[0];
+					}
+				}
+
+				const auditData = await dattoRmmApiRequest.call(
+					this,
+					'GET',
+					`/api/v2/audit/device/${device.uid}`,
+					{},
+					queryParams,
+				);
+
+				// Process audit change log for historical activities
+				if (auditData && auditData.changeLog && Array.isArray(auditData.changeLog)) {
+					auditData.changeLog.forEach((change: any) => {
+						deviceActivities.push({
+							id: `audit-${device.uid}-${change.id || Math.random()}`,
+							activityTime: change.changeDate || change.auditDate || new Date().toISOString(),
+							activityType: 'audit_change',
+							deviceName: device.hostname || device.displayName,
+							deviceId: device.uid,
+							siteName: device.siteName,
+							siteId: device.siteUid,
+							message: `Audit Change: ${change.changeType || 'System Change'} - ${change.description || change.item || 'Hardware/Software modification'}`,
+							severity: 'low',
+							status: 'completed',
+							activityResult: 'success',
+							priority: 'low',
+							data: {
+								changeType: change.changeType,
+								item: change.item,
+								description: change.description,
+								auditDate: change.auditDate,
+								changeDate: change.changeDate,
+								deviceType: device.deviceType,
+								operatingSystem: device.operatingSystem,
+							},
+						});
+					});
+				}
+			} catch (auditError) {
+				console.warn(`Could not fetch audit data for device ${device.uid}:`, auditError.message);
+			}
+
+			// Add current device status as activity
+			deviceActivities.push({
+				id: `${device.uid}-status`,
 				activityTime: device.lastSeen || new Date().toISOString(),
 				activityType: 'device_status',
 				deviceName: device.hostname || device.displayName,
@@ -140,23 +213,52 @@ async function handleGetAllDeviceStatus(this: IExecuteFunctions, itemIndex: numb
 				severity: device.online ? 'low' : 'high',
 				status: device.online ? 'online' : 'offline',
 				activityResult: device.online ? 'success' : 'pending',
-				priority: deviceAlerts.length > 0 ? 'high' : 'low',
-				lastSeen: device.lastSeen,
-				deviceType: device.deviceType,
-				operatingSystem: device.operatingSystem,
-				intIpAddress: device.intIpAddress,
-				extIpAddress: device.extIpAddress,
-				openAlerts: deviceAlerts.length,
-				recentAlerts: deviceAlerts.slice(0, 3), // Include up to 3 recent alerts
-				// Additional device status information
-				patchStatus: device.patchManagement?.patchStatus,
-				antivirusStatus: device.antivirus?.antivirusProductState,
-				domain: device.domain,
-				workgroup: device.workgroup,
-				serialNumber: device.serialNumber,
-				warranty: device.warranty,
-				description: device.description,
-			};
+				priority: device.online ? 'low' : 'high',
+				data: {
+					deviceType: device.deviceType,
+					operatingSystem: device.operatingSystem,
+					lastSeen: device.lastSeen,
+					ipAddress: device.intIpAddress,
+					extIpAddress: device.extIpAddress,
+					domain: device.domain,
+					workgroup: device.workgroup,
+				},
+			});
+
+			return deviceActivities;
+		});
+
+		// Wait for all device audit data to be fetched
+		const allDeviceActivities = await Promise.all(deviceActivitiesPromises);
+		let deviceActivities = allDeviceActivities.flat();
+
+		// Add alert activities for additional historical context
+		alerts.forEach((alert: any) => {
+			deviceActivities.push({
+				id: alert.alertUid || `alert-${Math.random()}`,
+				activityTime:
+					alert.alertSourceTime || alert.alertDate || alert.created || new Date().toISOString(),
+				activityType: 'alert',
+				deviceName: alert.deviceName,
+				deviceId: alert.deviceUid,
+				siteName: alert.siteName,
+				siteId: alert.siteUid,
+				message: alert.alertMessage || alert.message || 'Alert activity',
+				severity: (alert.priority || 'medium').toLowerCase(),
+				status: alert.alertStatus || 'active',
+				activityResult: alert.alertStatus === 'resolved' ? 'success' : 'pending',
+				priority: (alert.priority || 'medium').toLowerCase(),
+				data: {
+					alertType: alert.alertType,
+					alertCategory: alert.alertCategory,
+					diagnostics: alert.diagnostics,
+					resolution: alert.resolution,
+					ticketNumber: alert.ticketNumber,
+					muted: alert.muted,
+					created: alert.created,
+					resolved: alert.resolved,
+				},
+			});
 		});
 
 		// Apply date filtering if specified
@@ -164,14 +266,14 @@ async function handleGetAllDeviceStatus(this: IExecuteFunctions, itemIndex: numb
 		if (additionalFields.dateFrom) {
 			const fromDate = new Date(additionalFields.dateFrom as string);
 			filteredActivities = filteredActivities.filter(
-				(activity) => new Date(activity.lastSeen || activity.activityTime) >= fromDate,
+				(activity) => new Date(activity.activityTime) >= fromDate,
 			);
 		}
 
 		if (additionalFields.dateTo) {
 			const toDate = new Date(additionalFields.dateTo as string);
 			filteredActivities = filteredActivities.filter(
-				(activity) => new Date(activity.lastSeen || activity.activityTime) <= toDate,
+				(activity) => new Date(activity.activityTime) <= toDate,
 			);
 		}
 
@@ -179,6 +281,13 @@ async function handleGetAllDeviceStatus(this: IExecuteFunctions, itemIndex: numb
 		if (additionalFields.severity) {
 			filteredActivities = filteredActivities.filter(
 				(activity) => activity.severity === additionalFields.severity,
+			);
+		}
+
+		// Apply activity type filtering
+		if (additionalFields.activityType && Array.isArray(additionalFields.activityType)) {
+			filteredActivities = filteredActivities.filter((activity) =>
+				(additionalFields.activityType as string[]).includes(activity.activityType),
 			);
 		}
 
@@ -191,15 +300,15 @@ async function handleGetAllDeviceStatus(this: IExecuteFunctions, itemIndex: numb
 			let bValue = b[sortBy as keyof typeof b];
 
 			// Handle date sorting
-			if (sortBy === 'activityTime' || sortBy === 'lastSeen') {
+			if (sortBy === 'activityTime') {
 				aValue = new Date(aValue || 0).getTime();
 				bValue = new Date(bValue || 0).getTime();
 			}
 
 			if (sortOrder === 'desc') {
-				return bValue > aValue ? 1 : -1;
+				return (bValue as number) - (aValue as number);
 			} else {
-				return aValue > bValue ? 1 : -1;
+				return (aValue as number) - (bValue as number);
 			}
 		});
 
