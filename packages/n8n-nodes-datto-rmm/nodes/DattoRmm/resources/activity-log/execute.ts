@@ -171,19 +171,83 @@ async function handleGetAllDeviceStatus(this: IExecuteFunctions, itemIndex: numb
 				// Process audit change log for historical activities
 				if (auditData && auditData.changeLog && Array.isArray(auditData.changeLog)) {
 					auditData.changeLog.forEach((change: any) => {
+						const changeDesc =
+							change.description || change.item || 'Hardware/Software modification';
+						const changeType = change.changeType || 'System Change';
+
+						// Enhanced detection for user-related activities
+						let activityType = 'audit_change';
+						let severity = 'low';
+						let priority = 'low';
+						let message = `Audit Change: ${changeType} - ${changeDesc}`;
+
+						// Look for user login/logout indicators in audit changes
+						const loginIndicators = [
+							/user.*log(in|on|ged)/i,
+							/session.*start/i,
+							/authentication.*success/i,
+							/rdp.*connect/i,
+							/terminal.*service.*connect/i,
+							/event.*4624/i, // Windows successful logon
+							/interactive.*logon/i,
+						];
+
+						const logoutIndicators = [
+							/user.*log(out|off)/i,
+							/session.*(end|terminat|close)/i,
+							/rdp.*disconnect/i,
+							/terminal.*service.*disconnect/i,
+							/event.*4634/i, // Windows logoff
+							/event.*4647/i, // User initiated logoff
+							/interactive.*logoff/i,
+						];
+
+						// Check for login activities
+						if (
+							loginIndicators.some(
+								(pattern) => pattern.test(changeDesc) || pattern.test(changeType),
+							)
+						) {
+							activityType = 'user_login';
+							severity = 'low';
+							priority = 'low';
+							message = `User Login Detected: ${changeDesc}`;
+						}
+						// Check for logout activities
+						else if (
+							logoutIndicators.some(
+								(pattern) => pattern.test(changeDesc) || pattern.test(changeType),
+							)
+						) {
+							activityType = 'user_logout';
+							severity = 'low';
+							priority = 'low';
+							message = `User Logout Detected: ${changeDesc}`;
+						}
+						// Check for user account changes
+						else if (
+							/user.*account|account.*user/i.test(changeDesc) ||
+							/user.*creat|user.*delet|user.*modif/i.test(changeDesc)
+						) {
+							activityType = 'user_account_change';
+							severity = 'medium';
+							priority = 'medium';
+							message = `User Account Activity: ${changeDesc}`;
+						}
+
 						deviceActivities.push({
 							id: `audit-${device.uid}-${change.id || Math.random()}`,
 							activityTime: change.changeDate || change.auditDate || new Date().toISOString(),
-							activityType: 'audit_change',
+							activityType: activityType,
 							deviceName: device.hostname || device.displayName,
 							deviceId: device.uid,
 							siteName: device.siteName,
 							siteId: device.siteUid,
-							message: `Audit Change: ${change.changeType || 'System Change'} - ${change.description || change.item || 'Hardware/Software modification'}`,
-							severity: 'low',
+							message: message,
+							severity: severity,
 							status: 'completed',
 							activityResult: 'success',
-							priority: 'low',
+							priority: priority,
 							data: {
 								changeType: change.changeType,
 								item: change.item,
@@ -192,6 +256,7 @@ async function handleGetAllDeviceStatus(this: IExecuteFunctions, itemIndex: numb
 								changeDate: change.changeDate,
 								deviceType: device.deviceType,
 								operatingSystem: device.operatingSystem,
+								originalMessage: `${changeType} - ${changeDesc}`,
 							},
 						});
 					});
@@ -232,18 +297,94 @@ async function handleGetAllDeviceStatus(this: IExecuteFunctions, itemIndex: numb
 		const allDeviceActivities = await Promise.all(deviceActivitiesPromises);
 		let deviceActivities = allDeviceActivities.flat();
 
-		// Add alert activities for additional historical context
+		// Add alert activities for additional historical context with enhanced login detection
 		alerts.forEach((alert: any) => {
+			const alertMessage = alert.alertMessage || alert.message || 'Alert activity';
+			const diagnostics = alert.diagnostics || '';
+			const alertType = alert.alertType || '';
+
+			// Enhanced activity type detection for alerts
+			let activityType = 'alert';
+			let enhancedMessage = alertMessage;
+
+			// Check for login-related alerts
+			const loginPatterns = [
+				/login|logon|sign.?in|authentication.*success|logged.?in/i,
+				/user.*(start|begin|connect)/i,
+				/session.*(start|creat|establish)/i,
+				/event.?4624|successful.*logon/i,
+				/rdp.*(connect|login|establish)/i,
+				/terminal.?services.*(login|connect)/i,
+				/interactive.*logon/i,
+			];
+
+			const logoutPatterns = [
+				/logout|logoff|sign.?out|disconnect.*user/i,
+				/user.*(end|terminat|close.*session)/i,
+				/session.*(end|terminat|close|expire)/i,
+				/event.?4634|event.?4647|user.*logoff/i,
+				/rdp.*(disconnect|close)/i,
+				/terminal.?services.*(disconnect|close)/i,
+				/interactive.*logoff/i,
+			];
+
+			const failedLoginPatterns = [
+				/login.*fail|logon.*fail|authentication.*fail/i,
+				/event.?4625|failed.*logon/i,
+				/invalid.*credential|incorrect.*password/i,
+				/access.*denied.*login/i,
+				/authentication.*error/i,
+			];
+
+			// Determine activity type based on alert content
+			if (
+				loginPatterns.some(
+					(pattern) =>
+						pattern.test(alertMessage) || pattern.test(diagnostics) || pattern.test(alertType),
+				)
+			) {
+				activityType = 'user_login';
+				enhancedMessage = `User Login Activity: ${alertMessage}`;
+			} else if (
+				logoutPatterns.some(
+					(pattern) =>
+						pattern.test(alertMessage) || pattern.test(diagnostics) || pattern.test(alertType),
+				)
+			) {
+				activityType = 'user_logout';
+				enhancedMessage = `User Logout Activity: ${alertMessage}`;
+			} else if (
+				failedLoginPatterns.some(
+					(pattern) =>
+						pattern.test(alertMessage) || pattern.test(diagnostics) || pattern.test(alertType),
+				)
+			) {
+				activityType = 'failed_login';
+				enhancedMessage = `Failed Login Attempt: ${alertMessage}`;
+			} else if (
+				/device.*(online|connect|available)/i.test(alertMessage) ||
+				/network.*connect/i.test(alertMessage)
+			) {
+				activityType = 'device_online';
+				enhancedMessage = `Device Online: ${alertMessage}`;
+			} else if (
+				/device.*(offline|disconnect|unavailable)/i.test(alertMessage) ||
+				/network.*disconnect/i.test(alertMessage)
+			) {
+				activityType = 'device_offline';
+				enhancedMessage = `Device Offline: ${alertMessage}`;
+			}
+
 			deviceActivities.push({
 				id: alert.alertUid || `alert-${Math.random()}`,
 				activityTime:
 					alert.alertSourceTime || alert.alertDate || alert.created || new Date().toISOString(),
-				activityType: 'alert',
+				activityType: activityType,
 				deviceName: alert.deviceName,
 				deviceId: alert.deviceUid,
 				siteName: alert.siteName,
 				siteId: alert.siteUid,
-				message: alert.alertMessage || alert.message || 'Alert activity',
+				message: enhancedMessage,
 				severity: (alert.priority || 'medium').toLowerCase(),
 				status: alert.alertStatus || 'active',
 				activityResult: alert.alertStatus === 'resolved' ? 'success' : 'pending',
@@ -257,6 +398,7 @@ async function handleGetAllDeviceStatus(this: IExecuteFunctions, itemIndex: numb
 					muted: alert.muted,
 					created: alert.created,
 					resolved: alert.resolved,
+					originalMessage: alertMessage,
 				},
 			});
 		});
@@ -357,17 +499,63 @@ async function handleSearchDeviceEvents(this: IExecuteFunctions, itemIndex: numb
 
 		const allAlerts = [...openAlerts, ...resolvedAlerts];
 
-		// Filter alerts based on search query
+		// Enhanced search patterns for login/logout detection
 		const caseSensitive = searchOptions.caseSensitive || false;
 		const searchRegex = new RegExp(searchQuery, caseSensitive ? 'g' : 'gi');
 
+		// Enhanced login/logout patterns to detect user activity
+		const loginPatterns = [
+			/login|logon|sign.?in|authentication|logged.?in/gi,
+			/user.*(start|begin|initiat)/gi,
+			/session.*(start|creat|establish)/gi,
+			/event.?id.?4624/gi, // Windows successful logon event
+			/event.?id.?4625/gi, // Windows failed logon event
+			/rdp.*(connect|login)/gi,
+			/terminal.?services.*(login|connect)/gi,
+		];
+
+		const logoutPatterns = [
+			/logout|logoff|sign.?out|disconnect/gi,
+			/user.*(end|terminat|close)/gi,
+			/session.*(end|terminat|close|expire)/gi,
+			/event.?id.?4634/gi, // Windows logoff event
+			/event.?id.?4647/gi, // User initiated logoff
+			/rdp.*(disconnect|close)/gi,
+			/terminal.?services.*(disconnect|close)/gi,
+		];
+
 		let matchingAlerts = allAlerts.filter((alert: any) => {
-			return (
-				searchRegex.test(alert.alertMessage || '') ||
-				searchRegex.test(alert.deviceName || '') ||
-				searchRegex.test(alert.siteName || '') ||
-				searchRegex.test(alert.alertType || '')
-			);
+			const message = alert.alertMessage || '';
+			const deviceName = alert.deviceName || '';
+			const siteName = alert.siteName || '';
+			const alertType = alert.alertType || '';
+			const diagnostics = alert.diagnostics || '';
+
+			// Check basic search query match
+			const basicMatch =
+				searchRegex.test(message) ||
+				searchRegex.test(deviceName) ||
+				searchRegex.test(siteName) ||
+				searchRegex.test(alertType) ||
+				searchRegex.test(diagnostics);
+
+			// Check for login patterns if search query suggests login activity
+			const searchForLogins = /login|logon|sign|session|user|auth/gi.test(searchQuery);
+			let loginMatch = false;
+
+			if (searchForLogins) {
+				loginMatch =
+					loginPatterns.some(
+						(pattern) =>
+							pattern.test(message) || pattern.test(diagnostics) || pattern.test(alertType),
+					) ||
+					logoutPatterns.some(
+						(pattern) =>
+							pattern.test(message) || pattern.test(diagnostics) || pattern.test(alertType),
+					);
+			}
+
+			return basicMatch || loginMatch;
 		});
 
 		// Apply date filtering

@@ -168,6 +168,30 @@ export const activityLogFields: INodeProperties[] = [
 						value: 'device_status',
 					},
 					{
+						name: 'Device Online',
+						value: 'device_online',
+					},
+					{
+						name: 'Device Offline',
+						value: 'device_offline',
+					},
+					{
+						name: 'User Login',
+						value: 'user_login',
+					},
+					{
+						name: 'User Logout',
+						value: 'user_logout',
+					},
+					{
+						name: 'Failed Login',
+						value: 'failed_login',
+					},
+					{
+						name: 'User Account Changes',
+						value: 'user_account_change',
+					},
+					{
 						name: 'Alerts',
 						value: 'alert',
 					},
@@ -294,6 +318,30 @@ export const activityLogFields: INodeProperties[] = [
 						value: 'device_status',
 					},
 					{
+						name: 'Device Online',
+						value: 'device_online',
+					},
+					{
+						name: 'Device Offline',
+						value: 'device_offline',
+					},
+					{
+						name: 'User Login',
+						value: 'user_login',
+					},
+					{
+						name: 'User Logout',
+						value: 'user_logout',
+					},
+					{
+						name: 'Failed Login',
+						value: 'failed_login',
+					},
+					{
+						name: 'User Account Changes',
+						value: 'user_account_change',
+					},
+					{
 						name: 'Alerts',
 						value: 'alert',
 					},
@@ -386,6 +434,30 @@ export const activityLogFields: INodeProperties[] = [
 					{
 						name: 'Device Status',
 						value: 'device_status',
+					},
+					{
+						name: 'Device Online',
+						value: 'device_online',
+					},
+					{
+						name: 'Device Offline',
+						value: 'device_offline',
+					},
+					{
+						name: 'User Login',
+						value: 'user_login',
+					},
+					{
+						name: 'User Logout',
+						value: 'user_logout',
+					},
+					{
+						name: 'Failed Login',
+						value: 'failed_login',
+					},
+					{
+						name: 'User Account Changes',
+						value: 'user_account_change',
 					},
 					{
 						name: 'Alerts',
@@ -487,6 +559,30 @@ export const activityLogFields: INodeProperties[] = [
 					{
 						name: 'Device Status',
 						value: 'device_status',
+					},
+					{
+						name: 'Device Online',
+						value: 'device_online',
+					},
+					{
+						name: 'Device Offline',
+						value: 'device_offline',
+					},
+					{
+						name: 'User Login',
+						value: 'user_login',
+					},
+					{
+						name: 'User Logout',
+						value: 'user_logout',
+					},
+					{
+						name: 'Failed Login',
+						value: 'failed_login',
+					},
+					{
+						name: 'User Account Changes',
+						value: 'user_account_change',
 					},
 					{
 						name: 'Alerts',
