@@ -15,32 +15,35 @@ export const activityLogOperations: INodeProperties[] = [
 			{
 				name: 'Get All',
 				value: 'getAll',
-				description: 'Retrieve all activity logs with optional filtering',
-				action: 'Get all activity logs',
+				description:
+					'Monitor device status and activities across all devices using device and alert data',
+				action: 'Get all device activities',
 			},
 			{
 				name: 'Search',
 				value: 'search',
-				description: 'Search activity logs using text queries and filters',
-				action: 'Search activity logs',
+				description: 'Search device events and alerts using text queries and filters',
+				action: 'Search device events',
 			},
 			{
 				name: 'Get by Device',
 				value: 'getByDevice',
-				description: 'Get activity logs for a specific device',
-				action: 'Get activity logs by device',
+				description:
+					'Monitor activities for a specific device using device status, alerts, and audit data',
+				action: 'Get device activities',
 			},
 			{
 				name: 'Get by Site',
 				value: 'getBySite',
-				description: 'Get activity logs for a specific site',
-				action: 'Get activity logs by site',
+				description:
+					'Monitor activities for all devices in a specific site using device and alert data',
+				action: 'Get site activities',
 			},
 			{
 				name: 'Get by User',
 				value: 'getByUser',
-				description: 'Get activity logs for a specific user',
-				action: 'Get activity logs by user',
+				description: 'Limited user activity information with guidance for comprehensive monitoring',
+				action: 'Get user activity guidance',
 			},
 		],
 		default: 'getAll',
@@ -107,7 +110,7 @@ export const activityLogFields: INodeProperties[] = [
 			},
 		},
 		default: false,
-		description: 'Whether to return all results or only up to a given limit',
+		description: 'Whether to return all device activities or only up to a given limit',
 	},
 	{
 		displayName: 'Limit',
@@ -125,7 +128,7 @@ export const activityLogFields: INodeProperties[] = [
 			maxValue: 1000,
 		},
 		default: 100,
-		description: 'Max number of results to return',
+		description: 'Max number of device activities to return',
 	},
 	{
 		displayName: 'Additional Fields',
@@ -145,14 +148,15 @@ export const activityLogFields: INodeProperties[] = [
 				name: 'dateFrom',
 				type: 'dateTime',
 				default: '',
-				description: 'Start date for activity log search (activities from this date onwards)',
+				description:
+					'Start date for device activity monitoring (activities from this date onwards)',
 			},
 			{
 				displayName: 'Date To',
 				name: 'dateTo',
 				type: 'dateTime',
 				default: '',
-				description: 'End date for activity log search (activities up to this date)',
+				description: 'End date for device activity monitoring (activities up to this date)',
 			},
 			{
 				displayName: 'Activity Type',
@@ -160,60 +164,20 @@ export const activityLogFields: INodeProperties[] = [
 				type: 'multiOptions',
 				options: [
 					{
-						name: 'Login Activity',
-						value: 'login',
+						name: 'Device Status',
+						value: 'device_status',
 					},
 					{
-						name: 'Licensing Activity',
-						value: 'licensing',
+						name: 'Alerts',
+						value: 'alert',
 					},
 					{
-						name: 'Password Reset',
-						value: 'password_reset',
-					},
-					{
-						name: '2FA Reset',
-						value: 'two_factor_reset',
-					},
-					{
-						name: 'Support Access',
-						value: 'support_access',
-					},
-					{
-						name: 'User Management',
-						value: 'user_management',
-					},
-					{
-						name: 'Device Management',
-						value: 'device_management',
-					},
-					{
-						name: 'Site Management',
-						value: 'site_management',
-					},
-					{
-						name: 'Policy Deployment',
-						value: 'policy_deployment',
-					},
-					{
-						name: 'Monitor Management',
-						value: 'monitor_management',
-					},
-					{
-						name: 'Component Activity',
-						value: 'component_activity',
-					},
-					{
-						name: 'Job Execution',
-						value: 'job_execution',
-					},
-					{
-						name: 'Report Activity',
-						value: 'report_activity',
+						name: 'Audit Changes',
+						value: 'audit_change',
 					},
 				],
 				default: [],
-				description: 'Filter by specific activity types',
+				description: 'Filter by activity types available through device monitoring',
 			},
 			{
 				displayName: 'User ID',
@@ -227,14 +191,14 @@ export const activityLogFields: INodeProperties[] = [
 				name: 'deviceId',
 				type: 'string',
 				default: '',
-				description: 'Filter activities by specific device ID',
+				description: 'Filter activities by specific device UID',
 			},
 			{
 				displayName: 'Site ID',
 				name: 'siteId',
 				type: 'string',
 				default: '',
-				description: 'Filter activities by specific site ID',
+				description: 'Filter activities by specific site UID',
 			},
 			{
 				displayName: 'Severity',
@@ -284,7 +248,7 @@ export const activityLogFields: INodeProperties[] = [
 		},
 		default: '',
 		description:
-			'Text to search for in activity logs (searches across activity messages, user names, device names, etc.)',
+			'Text to search for in device events and alerts (searches across alert messages, device names, etc.)',
 	},
 	{
 		displayName: 'Search Options',
@@ -304,14 +268,14 @@ export const activityLogFields: INodeProperties[] = [
 				name: 'dateFrom',
 				type: 'dateTime',
 				default: '',
-				description: 'Start date for activity log search',
+				description: 'Start date for device event search',
 			},
 			{
 				displayName: 'Date To',
 				name: 'dateTo',
 				type: 'dateTime',
 				default: '',
-				description: 'End date for activity log search',
+				description: 'End date for device event search',
 			},
 			{
 				displayName: 'Case Sensitive',
@@ -326,60 +290,20 @@ export const activityLogFields: INodeProperties[] = [
 				type: 'multiOptions',
 				options: [
 					{
-						name: 'Login Activity',
-						value: 'login',
+						name: 'Device Status',
+						value: 'device_status',
 					},
 					{
-						name: 'Licensing Activity',
-						value: 'licensing',
+						name: 'Alerts',
+						value: 'alert',
 					},
 					{
-						name: 'Password Reset',
-						value: 'password_reset',
-					},
-					{
-						name: '2FA Reset',
-						value: 'two_factor_reset',
-					},
-					{
-						name: 'Support Access',
-						value: 'support_access',
-					},
-					{
-						name: 'User Management',
-						value: 'user_management',
-					},
-					{
-						name: 'Device Management',
-						value: 'device_management',
-					},
-					{
-						name: 'Site Management',
-						value: 'site_management',
-					},
-					{
-						name: 'Policy Deployment',
-						value: 'policy_deployment',
-					},
-					{
-						name: 'Monitor Management',
-						value: 'monitor_management',
-					},
-					{
-						name: 'Component Activity',
-						value: 'component_activity',
-					},
-					{
-						name: 'Job Execution',
-						value: 'job_execution',
-					},
-					{
-						name: 'Report Activity',
-						value: 'report_activity',
+						name: 'Audit Changes',
+						value: 'audit_change',
 					},
 				],
 				default: [],
-				description: 'Limit search to specific activity types',
+				description: 'Limit search to specific event types',
 			},
 		],
 	},
@@ -402,7 +326,7 @@ export const activityLogFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'Device to get activity logs for',
+		description: 'Device to monitor activities for',
 	},
 	{
 		displayName: 'Device Options',
@@ -422,7 +346,7 @@ export const activityLogFields: INodeProperties[] = [
 				name: 'returnAll',
 				type: 'boolean',
 				default: false,
-				description: 'Whether to return all results or only up to a given limit',
+				description: 'Whether to return all device activities or only up to a given limit',
 			},
 			{
 				displayName: 'Limit',
@@ -438,21 +362,21 @@ export const activityLogFields: INodeProperties[] = [
 					maxValue: 1000,
 				},
 				default: 100,
-				description: 'Max number of results to return',
+				description: 'Max number of device activities to return',
 			},
 			{
 				displayName: 'Date From',
 				name: 'dateFrom',
 				type: 'dateTime',
 				default: '',
-				description: 'Start date for activity log search',
+				description: 'Start date for device activity monitoring',
 			},
 			{
 				displayName: 'Date To',
 				name: 'dateTo',
 				type: 'dateTime',
 				default: '',
-				description: 'End date for activity log search',
+				description: 'End date for device activity monitoring',
 			},
 			{
 				displayName: 'Activity Type',
@@ -460,40 +384,20 @@ export const activityLogFields: INodeProperties[] = [
 				type: 'multiOptions',
 				options: [
 					{
-						name: 'Device Connection',
-						value: 'device_connection',
+						name: 'Device Status',
+						value: 'device_status',
 					},
 					{
-						name: 'Device Configuration',
-						value: 'device_configuration',
+						name: 'Alerts',
+						value: 'alert',
 					},
 					{
-						name: 'Monitor Activity',
-						value: 'monitor_activity',
-					},
-					{
-						name: 'Component Execution',
-						value: 'component_execution',
-					},
-					{
-						name: 'Job Execution',
-						value: 'job_execution',
-					},
-					{
-						name: 'Policy Changes',
-						value: 'policy_changes',
-					},
-					{
-						name: 'Software Changes',
-						value: 'software_changes',
-					},
-					{
-						name: 'Hardware Changes',
-						value: 'hardware_changes',
+						name: 'Audit Changes',
+						value: 'audit_change',
 					},
 				],
 				default: [],
-				description: 'Filter by device-specific activity types',
+				description: 'Filter by available device activity types',
 			},
 		],
 	},
@@ -516,7 +420,7 @@ export const activityLogFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'Site to get activity logs for',
+		description: 'Site to monitor activities for',
 	},
 	{
 		displayName: 'Site Options',
@@ -536,7 +440,7 @@ export const activityLogFields: INodeProperties[] = [
 				name: 'returnAll',
 				type: 'boolean',
 				default: false,
-				description: 'Whether to return all results or only up to a given limit',
+				description: 'Whether to return all site activities or only up to a given limit',
 			},
 			{
 				displayName: 'Limit',
@@ -552,21 +456,21 @@ export const activityLogFields: INodeProperties[] = [
 					maxValue: 1000,
 				},
 				default: 100,
-				description: 'Max number of results to return',
+				description: 'Max number of site activities to return',
 			},
 			{
 				displayName: 'Date From',
 				name: 'dateFrom',
 				type: 'dateTime',
 				default: '',
-				description: 'Start date for activity log search',
+				description: 'Start date for site activity monitoring',
 			},
 			{
 				displayName: 'Date To',
 				name: 'dateTo',
 				type: 'dateTime',
 				default: '',
-				description: 'End date for activity log search',
+				description: 'End date for site activity monitoring',
 			},
 			{
 				displayName: 'Include Device Activities',
@@ -581,36 +485,20 @@ export const activityLogFields: INodeProperties[] = [
 				type: 'multiOptions',
 				options: [
 					{
-						name: 'Site Management',
-						value: 'site_management',
+						name: 'Device Status',
+						value: 'device_status',
 					},
 					{
-						name: 'Device Management',
-						value: 'device_management',
+						name: 'Alerts',
+						value: 'alert',
 					},
 					{
-						name: 'Policy Deployment',
-						value: 'policy_deployment',
-					},
-					{
-						name: 'User Access',
-						value: 'user_access',
-					},
-					{
-						name: 'Monitor Activity',
-						value: 'monitor_activity',
-					},
-					{
-						name: 'Component Activity',
-						value: 'component_activity',
-					},
-					{
-						name: 'Job Execution',
-						value: 'job_execution',
+						name: 'Audit Changes',
+						value: 'audit_change',
 					},
 				],
 				default: [],
-				description: 'Filter by site-specific activity types',
+				description: 'Filter by available site activity types',
 			},
 		],
 	},
@@ -630,7 +518,7 @@ export const activityLogFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'User ID to get activity logs for',
+		description: 'User ID for activity guidance (limited functionality)',
 	},
 	{
 		displayName: 'User Options',
@@ -650,7 +538,7 @@ export const activityLogFields: INodeProperties[] = [
 				name: 'returnAll',
 				type: 'boolean',
 				default: false,
-				description: 'Whether to return all results or only up to a given limit',
+				description: 'Whether to return all guidance information',
 			},
 			{
 				displayName: 'Limit',
@@ -666,21 +554,21 @@ export const activityLogFields: INodeProperties[] = [
 					maxValue: 1000,
 				},
 				default: 100,
-				description: 'Max number of results to return',
+				description: 'Max number of guidance items to return',
 			},
 			{
 				displayName: 'Date From',
 				name: 'dateFrom',
 				type: 'dateTime',
 				default: '',
-				description: 'Start date for activity log search',
+				description: 'Date parameter (informational only)',
 			},
 			{
 				displayName: 'Date To',
 				name: 'dateTo',
 				type: 'dateTime',
 				default: '',
-				description: 'End date for activity log search',
+				description: 'Date parameter (informational only)',
 			},
 			{
 				displayName: 'Activity Type',
@@ -688,40 +576,12 @@ export const activityLogFields: INodeProperties[] = [
 				type: 'multiOptions',
 				options: [
 					{
-						name: 'Login Activity',
-						value: 'login',
-					},
-					{
-						name: 'Password Changes',
-						value: 'password_changes',
-					},
-					{
-						name: '2FA Activity',
-						value: 'two_factor_activity',
-					},
-					{
-						name: 'User Management',
-						value: 'user_management',
-					},
-					{
-						name: 'Device Access',
-						value: 'device_access',
-					},
-					{
-						name: 'Site Access',
-						value: 'site_access',
-					},
-					{
-						name: 'Configuration Changes',
-						value: 'configuration_changes',
-					},
-					{
-						name: 'Report Activity',
-						value: 'report_activity',
+						name: 'Guidance',
+						value: 'info',
 					},
 				],
 				default: [],
-				description: 'Filter by user-specific activity types',
+				description: 'Activity type (informational only)',
 			},
 		],
 	},
@@ -743,7 +603,7 @@ export const activityLogFields: INodeProperties[] = [
 		},
 		default: [],
 		description:
-			'Select specific columns to include in the response. Choose from available activity log fields.',
+			'Select specific columns to include in the response. Choose from available device activity fields.',
 		hint: 'Leave empty to return all columns',
 	},
 
