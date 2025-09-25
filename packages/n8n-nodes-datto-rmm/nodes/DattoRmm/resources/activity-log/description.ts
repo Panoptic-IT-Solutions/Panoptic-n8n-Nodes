@@ -48,6 +48,51 @@ export const activityLogOperations: INodeProperties[] = [
 ];
 
 export const activityLogFields: INodeProperties[] = [
+	// Operations
+	{
+		displayName: 'Operation',
+		name: 'operation',
+		type: 'options',
+		noDataExpression: true,
+		displayOptions: {
+			show: {
+				resource: ['activityLog'],
+			},
+		},
+		options: [
+			{
+				name: 'Get All',
+				value: 'getAll',
+				description: 'Retrieve all activity logs with optional filtering',
+				action: 'Get all activity logs',
+			},
+			{
+				name: 'Search',
+				value: 'search',
+				description: 'Search activity logs using text queries and filters',
+				action: 'Search activity logs',
+			},
+			{
+				name: 'Get by Device',
+				value: 'getByDevice',
+				description: 'Get activity logs for a specific device',
+				action: 'Get activity logs by device',
+			},
+			{
+				name: 'Get by Site',
+				value: 'getBySite',
+				description: 'Get activity logs for a specific site',
+				action: 'Get activity logs by site',
+			},
+			{
+				name: 'Get by User',
+				value: 'getByUser',
+				description: 'Get activity logs for a specific user',
+				action: 'Get activity logs by user',
+			},
+		],
+		default: 'getAll',
+	},
 	// ====================
 	// Get All Operation
 	// ====================
@@ -238,7 +283,8 @@ export const activityLogFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'Text to search for in activity logs (searches across activity messages, user names, device names, etc.)',
+		description:
+			'Text to search for in activity logs (searches across activity messages, user names, device names, etc.)',
 	},
 	{
 		displayName: 'Search Options',
@@ -696,7 +742,8 @@ export const activityLogFields: INodeProperties[] = [
 			},
 		},
 		default: [],
-		description: 'Select specific columns to include in the response. Choose from available activity log fields.',
+		description:
+			'Select specific columns to include in the response. Choose from available activity log fields.',
 		hint: 'Leave empty to return all columns',
 	},
 
